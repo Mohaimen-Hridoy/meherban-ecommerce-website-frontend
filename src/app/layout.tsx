@@ -1,24 +1,28 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/authContext';
 import { LanguageProvider } from '@/lib/i18n';
-import { Navbar } from '@/components/Navbar';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const playfair = Playfair_Display({
+  variable: '--font-playfair',
   subsets: ['latin'],
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const jakarta = Plus_Jakarta_Sans({
+  variable: '--font-jakarta',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'BazarPool — Community-Based Wholesale Group-Buying Platform',
+  title: 'MEHERBAN — Wear Your Story | Premium Fashion & Luxury Apparel',
   description:
-    'Join local group-buying pools for essential commodities. Unlock bulk wholesale pricing directly from producers with zero middlemen.',
+    'Discover MEHERBAN: Contemporary luxury fashion, tailored silhouettes, streetwear essentials, and handcrafted accessories. Free shipping on all orders over ৳ 1,999.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -27,22 +31,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <body className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+    <html
+      lang="en"
+      className={`${playfair.variable} ${jakarta.variable} scroll-smooth antialiased`}
+    >
+      <body className="min-h-screen bg-[#FAFAF8] text-[#141414] font-sans selection:bg-[#231d1a] selection:text-white">
         <AuthProvider>
           <LanguageProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 px-4 text-center text-xs text-slate-500">
-              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p>© 2026 BazarPool Platform. Architected by Mohaimen Hridoy.</p>
-                <div className="flex items-center gap-6">
-                  <span>Concurrency-Safe Pools</span>
-                  <span>Double-Entry Ledger</span>
-                  <span>QR Pickup Authentication</span>
-                </div>
-              </div>
-            </footer>
+            {children}
           </LanguageProvider>
         </AuthProvider>
       </body>
