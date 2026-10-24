@@ -23,10 +23,13 @@ export const MeherbanHeader: React.FC = () => {
     setIsSearchOpen,
     activeCategory,
     setActiveCategory,
+    deviceView,
   } = useMeherban();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
+
+  const isSimulatedMobile = deviceView === 'mobile';
 
   const navLinks = [
     { label: 'Home', href: '#hero', category: 'Home' },
@@ -49,11 +52,11 @@ export const MeherbanHeader: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 transition-all">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 transition-all shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Mobile: Hamburger Button */}
-            <div className="flex items-center lg:hidden">
+            {/* Hamburger Button (shown on small screens or in simulated mobile) */}
+            <div className={`flex items-center ${!isSimulatedMobile ? 'lg:hidden' : ''}`}>
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -67,91 +70,97 @@ export const MeherbanHeader: React.FC = () => {
             {/* Brand Logo: MEHERBAN / WEAR YOUR STORY */}
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left cursor-pointer select-none">
               <a href="#" className="flex flex-col items-center">
-                <span className="font-serif text-[22px] sm:text-[26px] tracking-[0.22em] font-semibold text-neutral-950 uppercase leading-none">
+                <span className="font-serif text-[20px] sm:text-[25px] tracking-[0.24em] font-semibold text-neutral-950 uppercase leading-none">
                   MEHERBAN
                 </span>
-                <span className="text-[8px] sm:text-[9px] tracking-[0.32em] text-neutral-500 uppercase font-medium mt-1">
+                <span className="text-[8px] sm:text-[8.5px] tracking-[0.32em] text-neutral-500 uppercase font-medium mt-1">
                   WEAR YOUR STORY
                 </span>
               </a>
             </div>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-7">
-              {navLinks.map((link) => {
-                const isActive = activeCategory === link.category;
-                return (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => handleNavClick(link.category)}
-                    className={`relative text-[13.5px] font-medium tracking-wide transition-colors py-1 ${
-                      isActive
-                        ? 'text-neutral-950 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-950'
-                    }`}
-                  >
-                    {link.label}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-neutral-950 rounded-full" />
-                    )}
-                  </a>
-                );
-              })}
-            </nav>
+            {/* Desktop Navigation Links (hidden in simulated mobile) */}
+            {!isSimulatedMobile && (
+              <nav className="hidden lg:flex items-center gap-7">
+                {navLinks.map((link) => {
+                  const isActive = activeCategory === link.category;
+                  return (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      onClick={() => handleNavClick(link.category)}
+                      className={`relative text-[13.5px] font-medium tracking-wide transition-colors py-1 ${
+                        isActive
+                          ? 'text-neutral-950 font-semibold'
+                          : 'text-neutral-600 hover:text-neutral-950'
+                      }`}
+                    >
+                      {link.label}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-neutral-950 rounded-full" />
+                      )}
+                    </a>
+                  );
+                })}
+              </nav>
+            )}
 
             {/* Header Right Actions */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Desktop Search Bar (Pill design matching screenshot) */}
-              <div className="hidden md:flex items-center">
-                <form
-                  onSubmit={handleSearchSubmit}
-                  className="relative flex items-center"
-                >
-                  <Search className="absolute left-3.5 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onFocus={() => setIsSearchOpen(true)}
-                    placeholder="Search products..."
-                    className="w-44 lg:w-56 pl-9 pr-3 py-1.5 text-xs bg-neutral-100/80 hover:bg-neutral-100 border border-transparent focus:border-neutral-300 focus:bg-white rounded-full transition-all outline-none text-neutral-800 placeholder:text-neutral-400"
-                  />
-                </form>
-              </div>
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              {/* Desktop Search Bar */}
+              {!isSimulatedMobile && (
+                <div className="hidden md:flex items-center">
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    className="relative flex items-center"
+                  >
+                    <Search className="absolute left-3.5 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      onFocus={() => setIsSearchOpen(true)}
+                      placeholder="Search products..."
+                      className="w-44 lg:w-56 pl-9 pr-3 py-1.5 text-xs bg-neutral-100/80 hover:bg-neutral-100 border border-transparent focus:border-neutral-300 focus:bg-white rounded-full transition-all outline-none text-neutral-800 placeholder:text-neutral-400"
+                    />
+                  </form>
+                </div>
+              )}
 
               {/* Mobile Search Icon */}
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(true)}
-                className="md:hidden p-2 text-neutral-800 hover:text-black transition-colors"
+                className={`${!isSimulatedMobile ? 'md:hidden' : ''} p-1.5 text-neutral-800 hover:text-black transition-colors`}
                 aria-label="Search"
               >
                 <Search className="w-5 h-5 stroke-[1.6]" />
               </button>
 
-              {/* User Account Icon */}
-              <button
-                type="button"
-                onClick={() => alert('Account Dashboard — Welcome to MEHERBAN VIP Lounge')}
-                className="p-2 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
-                aria-label="Account"
-                title="Account"
-              >
-                <User className="w-5 h-5 stroke-[1.6]" />
-              </button>
+              {/* User Account Icon (hidden on small mobile header, matching mobile screenshot) */}
+              {!isSimulatedMobile && (
+                <button
+                  type="button"
+                  onClick={() => alert('Account Dashboard — Welcome to MEHERBAN VIP Lounge')}
+                  className="hidden sm:flex p-1.5 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
+                  aria-label="Account"
+                  title="Account"
+                >
+                  <User className="w-5 h-5 stroke-[1.6]" />
+                </button>
+              )}
 
               {/* Wishlist Heart Icon with Count Badge */}
               <button
                 type="button"
                 onClick={() => setIsWishlistOpen(true)}
-                className="relative p-2 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
+                className="relative p-1.5 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
                 aria-label="Wishlist"
                 title="Wishlist"
               >
                 <Heart className="w-5 h-5 stroke-[1.6]" />
                 {wishlistCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-neutral-900 text-white text-[9px] font-semibold rounded-full flex items-center justify-center animate-fade-in">
+                  <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-neutral-900 text-white text-[8px] font-semibold rounded-full flex items-center justify-center animate-fade-in">
                     {wishlistCount}
                   </span>
                 )}
@@ -161,12 +170,12 @@ export const MeherbanHeader: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
+                className="relative p-1.5 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
                 aria-label="Shopping Cart"
                 title="Cart"
               >
                 <ShoppingBag className="w-5 h-5 stroke-[1.6]" />
-                <span className="absolute top-1 right-1 w-4 h-4 bg-neutral-900 text-white text-[9px] font-semibold rounded-full flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-neutral-900 text-white text-[8px] font-semibold rounded-full flex items-center justify-center">
                   {cartCount}
                 </span>
               </button>
@@ -175,9 +184,9 @@ export const MeherbanHeader: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Slide-Over Menu Drawer */}
+      {/* Mobile Menu Drawer */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div className="fixed inset-0 z-50 flex">
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}

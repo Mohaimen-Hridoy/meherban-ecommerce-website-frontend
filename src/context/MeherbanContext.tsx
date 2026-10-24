@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem, MeherbanProduct, WishlistItem } from '@/types/meherban';
 import { MEHERBAN_PRODUCTS } from '@/lib/meherbanData';
 
-export type DeviceViewMode = 'responsive' | 'desktop' | 'mobile';
+export type DeviceViewMode = 'responsive' | 'desktop' | 'mobile' | 'split';
 
 interface ToastMessage {
   id: string;
