@@ -184,11 +184,14 @@ export const MeherbanCartDrawer: React.FC = () => {
             <button
               type="button"
               onClick={handleProceedToCheckout}
-              className="w-full py-3.5 bg-neutral-950 hover:bg-black text-white text-xs sm:text-sm uppercase tracking-widest font-semibold rounded-md shadow-lg transition-all flex items-center justify-center gap-2 group"
+              className="w-full py-3.5 bg-neutral-950 hover:bg-black text-white text-xs sm:text-sm uppercase tracking-wider font-bold rounded-lg shadow-lg transition-all flex items-center justify-center gap-2 group active:scale-98"
             >
-              <span>Proceed to Checkout</span>
+              <span>অর্ডার সম্পন্ন করুন (Checkout)</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
+            <p className="text-[10px] text-center text-neutral-400">
+              কোনো সাইন-আপ বা লগইন প্রয়োজন নেই
+            </p>
 
             <button
               type="button"

@@ -4,9 +4,12 @@ import React, { useRef } from 'react';
 import { ChevronRight, ArrowRight } from 'lucide-react';
 import { INSTAGRAM_POSTS } from '@/lib/meherbanData';
 import { InstagramIcon } from './SocialIcons';
+import { useMeherban } from '@/context/MeherbanContext';
 
 export const MeherbanInstagram: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { instagramPosts } = useMeherban();
+  const posts = instagramPosts && instagramPosts.length > 0 ? instagramPosts : INSTAGRAM_POSTS;
 
   const scrollRight = () => {
     if (scrollRef.current) {
@@ -45,7 +48,7 @@ export const MeherbanInstagram: React.FC = () => {
           ref={scrollRef}
           className="flex gap-2.5 sm:gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-2"
         >
-          {INSTAGRAM_POSTS.map((item) => (
+          {posts.map((item) => (
             <a
               key={item.id}
               href="https://instagram.com"

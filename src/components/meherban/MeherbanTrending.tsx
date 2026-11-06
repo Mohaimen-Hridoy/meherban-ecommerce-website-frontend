@@ -8,14 +8,22 @@ import {
   ShoppingBag,
   Heart,
   Eye,
+  Zap,
 } from 'lucide-react';
-import { MEHERBAN_PRODUCTS } from '@/lib/meherbanData';
 import { useMeherban } from '@/context/MeherbanContext';
 import { MeherbanProduct } from '@/types/meherban';
 
 export const MeherbanTrending: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { addToCart, toggleWishlist, isWishlisted, openQuickView } = useMeherban();
+  const {
+    products,
+    addToCart,
+    directBuyNow,
+    toggleWishlist,
+    isWishlisted,
+    openQuickView,
+    activeCategory,
+  } = useMeherban();
 
   const [selectedColors, setSelectedColors] = useState<{ [productId: string]: string }>({});
 
@@ -30,8 +38,16 @@ export const MeherbanTrending: React.FC = () => {
 
   const handleAddToCartClick = (e: React.MouseEvent, product: MeherbanProduct) => {
     e.stopPropagation();
+    if (!product.inStock) return;
     const chosenColor = selectedColors[product.id] || product.colorSwatches[0]?.name;
     addToCart(product, product.sizes[0], chosenColor, 1);
+  };
+
+  const handleBuyNowClick = (e: React.MouseEvent, product: MeherbanProduct) => {
+    e.stopPropagation();
+    if (!product.inStock) return;
+    const chosenColor = selectedColors[product.id] || product.colorSwatches[0]?.name;
+    directBuyNow(product, product.sizes[0], chosenColor, 1);
   };
 
   const handleWishlistClick = (e: React.MouseEvent, product: MeherbanProduct) => {
@@ -51,6 +67,12 @@ export const MeherbanTrending: React.FC = () => {
     }
   };
 
+  // Filter products according to activeCategory if selected, else show trending & featured
+  const displayedProducts = products.filter((p) => {
+    if (activeCategory === 'Home' || activeCategory === 'All') return true;
+    return p.categoryName.toLowerCase() === activeCategory.toLowerCase();
+  });
+
   return (
     <section id="trending" className="py-10 sm:py-16 bg-white text-neutral-900 border-t border-neutral-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,21 +80,17 @@ export const MeherbanTrending: React.FC = () => {
         <div className="flex items-end justify-between mb-6 sm:mb-8">
           <div>
             <span className="text-[10px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-neutral-400 block mb-1">
-              FEATURED PRODUCTS
+              {activeCategory !== 'Home' ? `${activeCategory} COLLECTION` : 'FEATURED APPAREL & ACCESSORIES'}
             </span>
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold uppercase tracking-tight text-neutral-950">
-              TRENDING NOW
+              {activeCategory !== 'Home' ? `${activeCategory} PICKS` : 'TRENDING NOW'}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            <a
-              href="#trending"
-              className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium uppercase tracking-wider text-neutral-600 hover:text-black transition-colors"
-            >
-              <span>VIEW ALL</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
+            <span className="text-xs text-neutral-500 font-medium">
+              {displayedProducts.length} items
+            </span>
 
             {/* Desktop Navigation Arrows */}
             <div className="hidden sm:flex items-center gap-1.5 ml-2">
@@ -98,32 +116,41 @@ export const MeherbanTrending: React.FC = () => {
 
         {/* 
           Horizontal Scrollable Row of Product Cards
-          - Displays 6 products from the screenshot
-          - Clean sizing for mobile (w-[155px]) and desktop (w-[195px] - w-[210px])
         */}
         <div
           ref={scrollContainerRef}
           className="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 snap-x snap-mandatory"
         >
-          {MEHERBAN_PRODUCTS.map((product) => {
+          {displayedProducts.map((product) => {
             const isSaved = isWishlisted(product.id);
             const activeColor =
               selectedColors[product.id] || product.colorSwatches[0]?.name;
+            const isAvailable = product.inStock && (product.stockQuantity === undefined || product.stockQuantity > 0);
 
             return (
               <div
                 key={product.id}
                 onClick={() => openQuickView(product)}
-                className="group relative flex-none w-[155px] sm:w-[195px] lg:w-[210px] snap-start flex flex-col justify-between cursor-pointer transition-all duration-300"
+                className={`group relative flex-none w-[165px] sm:w-[205px] lg:w-[225px] snap-start flex flex-col justify-between cursor-pointer transition-all duration-300 ${
+                  !isAvailable ? 'opacity-85' : ''
+                }`}
               >
                 {/* Product Image Box */}
                 <div className="relative aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden bg-[#F3F1EC] border border-neutral-200/50 p-2 sm:p-3 flex items-center justify-center transition-all duration-300 group-hover:shadow-md">
-                  {/* Badge */}
-                  {product.badge && (
-                    <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 bg-black text-white text-[8px] sm:text-[9px] font-semibold tracking-wider uppercase rounded-xs">
-                      {product.badge}
-                    </span>
-                  )}
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
+                    {product.badge && isAvailable && (
+                      <span className="px-1.5 py-0.5 bg-black text-white text-[8px] sm:text-[9px] font-semibold tracking-wider uppercase rounded-xs">
+                        {product.badge}
+                      </span>
+                    )}
+
+                    {!isAvailable && (
+                      <span className="px-2 py-0.5 bg-rose-600 text-white text-[9px] font-bold tracking-wider uppercase rounded-xs shadow-xs">
+                        স্টক আউট / Unavailable
+                      </span>
+                    )}
+                  </div>
 
                   {/* Wishlist Heart Icon Button */}
                   <button
@@ -141,14 +168,16 @@ export const MeherbanTrending: React.FC = () => {
 
                   {/* Product Image */}
                   <img
-                    src={product.images[0]}
+                    src={product.images[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'}
                     alt={product.title}
-                    className="w-full h-full object-contain object-center transform transition-transform duration-500 group-hover:scale-105"
+                    className={`w-full h-full object-contain object-center transform transition-transform duration-500 group-hover:scale-105 ${
+                      !isAvailable ? 'grayscale-30 contrast-90' : ''
+                    }`}
                     loading="lazy"
                   />
 
                   {/* Quick View Hover overlay */}
-                  <div className="hidden lg:flex absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center">
+                  <div className="hidden lg:flex absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center">
                     <span className="inline-flex items-center gap-1 bg-white/95 text-neutral-900 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-md">
                       <Eye className="w-3 h-3" />
                       Quick View
@@ -157,7 +186,7 @@ export const MeherbanTrending: React.FC = () => {
                 </div>
 
                 {/* Product Info */}
-                <div className="pt-2.5 pb-1 flex flex-col space-y-0.5">
+                <div className="pt-2.5 pb-1 flex flex-col space-y-1">
                   <h3 className="text-[12px] sm:text-[13px] font-medium text-neutral-900 tracking-tight line-clamp-1 group-hover:text-black">
                     {product.title}
                   </h3>
@@ -174,37 +203,56 @@ export const MeherbanTrending: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Swatches & Cart Button */}
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-1 sm:gap-1.5">
-                      {product.colorSwatches.map((swatch) => {
-                        const isColorActive = activeColor === swatch.name;
-                        return (
-                          <button
-                            key={swatch.name}
-                            type="button"
-                            onClick={(e) => handleColorClick(e, product.id, swatch.name)}
-                            title={swatch.name}
-                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border transition-all ${
-                              isColorActive
-                                ? 'ring-1.5 ring-neutral-950 ring-offset-1 scale-110'
-                                : 'border-neutral-300 hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: swatch.hex }}
-                          />
-                        );
-                      })}
-                    </div>
+                  {/* Swatches */}
+                  <div className="flex items-center gap-1 sm:gap-1.5 py-0.5">
+                    {product.colorSwatches.map((swatch) => {
+                      const isColorActive = activeColor === swatch.name;
+                      return (
+                        <button
+                          key={swatch.name}
+                          type="button"
+                          onClick={(e) => handleColorClick(e, product.id, swatch.name)}
+                          title={swatch.name}
+                          className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border transition-all ${
+                            isColorActive
+                              ? 'ring-1.5 ring-neutral-950 ring-offset-1 scale-110'
+                              : 'border-neutral-300 hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: swatch.hex }}
+                        />
+                      );
+                    })}
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={(e) => handleAddToCartClick(e, product)}
-                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-neutral-100 hover:bg-neutral-950 text-neutral-700 hover:text-white transition-all flex items-center justify-center shadow-xs"
-                      aria-label="Add to cart"
-                      title="Add to cart"
-                    >
-                      <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[1.8]" />
-                    </button>
+                  {/* Action Buttons: 1-Click Order & Add to Bag (Optimized for Meta/Instagram Ads) */}
+                  <div className="pt-1 flex items-center gap-1.5">
+                    {isAvailable ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => handleBuyNowClick(e, product)}
+                          className="flex-1 py-1.5 px-2 bg-neutral-950 hover:bg-black text-white text-[10px] font-semibold rounded-md transition-all flex items-center justify-center gap-1 shadow-xs active:scale-95"
+                          title="1-Click Direct Order"
+                        >
+                          <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+                          <span>অর্ডার করুন</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleAddToCartClick(e, product)}
+                          className="w-7 h-7 rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-800 transition-all flex items-center justify-center shadow-xs shrink-0"
+                          aria-label="Add to cart"
+                          title="Add to cart"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5 stroke-[1.8]" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="w-full py-1.5 bg-neutral-100 text-neutral-400 text-[10px] font-medium rounded-md text-center select-none">
+                        স্টক শেষ / Unavailable
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

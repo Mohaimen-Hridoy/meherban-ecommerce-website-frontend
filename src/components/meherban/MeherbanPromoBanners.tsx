@@ -4,7 +4,7 @@ import React from 'react';
 import { useMeherban } from '@/context/MeherbanContext';
 
 export const MeherbanPromoBanners: React.FC = () => {
-  const { setActiveCategory } = useMeherban();
+  const { setActiveCategory, promoBanners } = useMeherban();
 
   const promos = [
     {
@@ -43,7 +43,7 @@ export const MeherbanPromoBanners: React.FC = () => {
     <section className="py-6 sm:py-12 bg-[#FAF9F6]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {promos.map((item) => (
+          {(promoBanners && promoBanners.length > 0 ? promoBanners : promos).map((item) => (
             <div
               key={item.id}
               onClick={() => setActiveCategory(item.category)}

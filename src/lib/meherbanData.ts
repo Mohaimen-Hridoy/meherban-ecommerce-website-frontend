@@ -1,4 +1,4 @@
-import { MeherbanCategory, MeherbanProduct } from '@/types/meherban';
+import { MeherbanCategory, MeherbanProduct, HeroSlide, PromoBanner, InstagramPost } from '@/types/meherban';
 
 export const MEHERBAN_CATEGORIES: MeherbanCategory[] = [
   {
@@ -66,6 +66,7 @@ export const MEHERBAN_PRODUCTS: MeherbanProduct[] = [
     ],
     sizes: ['S', 'M', 'L', 'XL'],
     inStock: true,
+    stockQuantity: 45,
     isTrending: true,
     isFeatured: true,
     badge: 'HOT',
@@ -93,6 +94,7 @@ export const MEHERBAN_PRODUCTS: MeherbanProduct[] = [
     ],
     sizes: ['S', 'M', 'L', 'XL'],
     inStock: true,
+    stockQuantity: 45,
     isTrending: true,
     isFeatured: true,
     badge: 'BESTSELLER',
@@ -119,6 +121,7 @@ export const MEHERBAN_PRODUCTS: MeherbanProduct[] = [
     ],
     sizes: ['XS', 'S', 'M', 'L'],
     inStock: true,
+    stockQuantity: 30,
     isTrending: true,
     isFeatured: true,
     badge: 'TRENDING',
@@ -145,6 +148,7 @@ export const MEHERBAN_PRODUCTS: MeherbanProduct[] = [
     ],
     sizes: ['One Size'],
     inStock: true,
+    stockQuantity: 20,
     isTrending: true,
     isFeatured: true,
     badge: 'NEW',
@@ -171,6 +175,7 @@ export const MEHERBAN_PRODUCTS: MeherbanProduct[] = [
     ],
     sizes: ['One Size'],
     inStock: true,
+    stockQuantity: 20,
     isTrending: true,
     isFeatured: true,
     badge: 'POPULAR',
@@ -197,6 +202,7 @@ export const MEHERBAN_PRODUCTS: MeherbanProduct[] = [
     ],
     sizes: ['42mm Case'],
     inStock: true,
+    stockQuantity: 15,
     isTrending: true,
     isFeatured: true,
     badge: 'PREMIUM',
@@ -259,5 +265,74 @@ export const INSTAGRAM_POSTS = [
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=85',
     likes: '1.5k',
     tag: '#LeatherDetails',
+  },
+];
+
+export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
+  {
+    id: 1,
+    tagline: "MEN'S & WOMEN'S COLLECTION",
+    headlineLine1: 'STYLE FOR',
+    headlineLine2: 'EVERY YOU',
+    subcategories: 'Clothing | Fashion Accessories | Unisex',
+    imageUrl:
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=85',
+    ctaPrimary: 'SHOP NOW →',
+    ctaSecondary: 'EXPLORE',
+  },
+  {
+    id: 2,
+    tagline: 'AUTUMN / WINTER EDIT',
+    headlineLine1: 'TIMELESS',
+    headlineLine2: 'MINIMALISM',
+    subcategories: 'Heavyweight Knits | Structured Crepe | Eyewear',
+    imageUrl:
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1600&q=85',
+    ctaPrimary: 'DISCOVER →',
+    ctaSecondary: 'LOOKBOOK',
+  },
+  {
+    id: 3,
+    tagline: 'STREET LUXE EDIT',
+    headlineLine1: 'URBAN',
+    headlineLine2: 'REDEFINED',
+    subcategories: 'Graphic Hoodies | Leather Bags | Timepieces',
+    imageUrl:
+      'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1600&q=85',
+    ctaPrimary: 'SHOP NOW →',
+    ctaSecondary: 'DETAILS',
+  },
+];
+
+export const DEFAULT_PROMO_BANNERS: PromoBanner[] = [
+  {
+    id: 'men-promo',
+    category: 'Men',
+    title: "MEN'S COLLECTION",
+    subtitle: 'Classic meets modern.',
+    cta: 'SHOP NOW →',
+    bgClass: 'bg-[#1F1A18] text-white',
+    imageUrl:
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=700&q=85',
+  },
+  {
+    id: 'women-promo',
+    category: 'Women',
+    title: "WOMEN'S COLLECTION",
+    subtitle: 'Elegance in every detail.',
+    cta: 'SHOP NOW →',
+    bgClass: 'bg-[#9C7F6E] text-white',
+    imageUrl:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=700&q=85',
+  },
+  {
+    id: 'accessories-promo',
+    category: 'Accessories',
+    title: 'ACCESSORIES',
+    subtitle: 'Complete your look.',
+    cta: 'SHOP NOW →',
+    bgClass: 'bg-[#241E1C] text-white',
+    imageUrl:
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=85',
   },
 ];

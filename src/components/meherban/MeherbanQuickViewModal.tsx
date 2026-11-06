@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Star, ShoppingBag, Heart, Check, Truck, ShieldCheck } from 'lucide-react';
+import { X, Star, ShoppingBag, Heart, Check, Truck, ShieldCheck, Zap } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
 
 export const MeherbanQuickViewModal: React.FC = () => {
@@ -9,6 +9,7 @@ export const MeherbanQuickViewModal: React.FC = () => {
     quickViewProduct,
     closeQuickView,
     addToCart,
+    directBuyNow,
     toggleWishlist,
     isWishlisted,
   } = useMeherban();
@@ -30,9 +31,19 @@ export const MeherbanQuickViewModal: React.FC = () => {
   if (!quickViewProduct) return null;
 
   const isSaved = isWishlisted(quickViewProduct.id);
+  const isAvailable =
+    quickViewProduct.inStock &&
+    (quickViewProduct.stockQuantity === undefined || quickViewProduct.stockQuantity > 0);
 
   const handleAdd = () => {
+    if (!isAvailable) return;
     addToCart(quickViewProduct, selectedSize, selectedColor, quantity);
+    closeQuickView();
+  };
+
+  const handleBuyNow = () => {
+    if (!isAvailable) return;
+    directBuyNow(quickViewProduct, selectedSize, selectedColor, quantity);
     closeQuickView();
   };
 
@@ -59,7 +70,7 @@ export const MeherbanQuickViewModal: React.FC = () => {
               <img
                 src={quickViewProduct.images[activeImageIdx] || quickViewProduct.images[0]}
                 alt={quickViewProduct.title}
-                className="w-full h-full object-contain"
+                className={`w-full h-full object-contain ${!isAvailable ? 'grayscale-30' : ''}`}
               />
             </div>
 
@@ -98,6 +109,7 @@ export const MeherbanQuickViewModal: React.FC = () => {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
                   {quickViewProduct.categoryName}
                 </span>
+
                 <div className="flex items-center gap-1 text-amber-500">
                   <Star className="w-3.5 h-3.5 fill-current" />
                   <span className="font-semibold text-neutral-800">
@@ -125,9 +137,15 @@ export const MeherbanQuickViewModal: React.FC = () => {
                     ৳ {quickViewProduct.originalPrice.toLocaleString()}
                   </span>
                 )}
-                <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[10px] rounded-xs uppercase">
-                  In Stock
-                </span>
+                {isAvailable ? (
+                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold text-[10px] rounded-xs uppercase">
+                    In Stock ({quickViewProduct.stockQuantity ?? 20} available)
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 bg-rose-50 text-rose-600 font-bold text-[10px] rounded-xs uppercase">
+                    Unavailable / স্টক শেষ
+                  </span>
+                )}
               </div>
 
               <p className="text-xs text-neutral-600 leading-relaxed font-light">
@@ -181,50 +199,76 @@ export const MeherbanQuickViewModal: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-3 pt-1">
-                <span className="text-xs font-semibold text-neutral-900">Quantity:</span>
-                <div className="flex items-center border border-neutral-300 rounded-md">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="px-2.5 py-1 text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-l-md transition-colors"
-                  >
-                    -
-                  </button>
-                  <span className="px-3 text-xs font-bold text-neutral-900">{quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="px-2.5 py-1 text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-r-md transition-colors"
-                  >
-                    +
-                  </button>
+              {isAvailable && (
+                <div className="flex items-center gap-3 pt-1">
+                  <span className="text-xs font-semibold text-neutral-900">Quantity:</span>
+                  <div className="flex items-center border border-neutral-300 rounded-md">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      className="px-2.5 py-1 text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-l-md transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="px-3 text-xs font-bold text-neutral-900">{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuantity((q) =>
+                          quickViewProduct.stockQuantity ? Math.min(quickViewProduct.stockQuantity, q + 1) : q + 1
+                        )
+                      }
+                      className="px-2.5 py-1 text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-r-md transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            <div className="pt-6 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleAdd}
-                className="flex-1 py-3 bg-neutral-950 hover:bg-black text-white text-xs uppercase tracking-widest font-semibold rounded-md shadow-lg transition-all flex items-center justify-center gap-2"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>Add To Bag · ৳ {(quickViewProduct.price * quantity).toLocaleString()}</span>
-              </button>
+            <div className="pt-6 flex flex-col gap-2">
+              {isAvailable ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    {/* Primary Direct Order Button for Ad Clickers */}
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      className="flex-1 py-3 bg-neutral-950 hover:bg-black text-white text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg transition-all flex items-center justify-center gap-2 active:scale-98"
+                    >
+                      <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span>সরাসরি অর্ডার করুন · ৳ {(quickViewProduct.price * quantity).toLocaleString()}</span>
+                    </button>
 
-              <button
-                type="button"
-                onClick={() => toggleWishlist(quickViewProduct)}
-                className={`p-3 rounded-md border transition-colors ${
-                  isSaved
-                    ? 'border-red-300 bg-red-50 text-red-600'
-                    : 'border-neutral-200 text-neutral-700 hover:border-black'
-                }`}
-                title="Save to Wishlist"
-              >
-                <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-              </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleWishlist(quickViewProduct)}
+                      className={`p-3 rounded-lg border transition-colors ${
+                        isSaved
+                          ? 'border-red-300 bg-red-50 text-red-600'
+                          : 'border-neutral-200 text-neutral-700 hover:border-black'
+                      }`}
+                      title="Save to Wishlist"
+                    >
+                      <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAdd}
+                    className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs uppercase tracking-wider font-semibold rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>কার্ট এ যোগ করুন</span>
+                  </button>
+                </>
+              ) : (
+                <div className="p-3 bg-neutral-100 text-neutral-500 rounded-lg text-center text-xs font-medium">
+                  এই পণ্যটি বর্তমানে শেষ হয়ে গেছে (Out of Stock)। নতুন স্টক আসলে জানানো হবে।
+                </div>
+              )}
             </div>
           </div>
         </div>

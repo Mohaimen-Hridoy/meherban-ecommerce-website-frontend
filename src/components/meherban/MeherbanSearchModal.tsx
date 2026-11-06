@@ -3,10 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
-import { MEHERBAN_PRODUCTS } from '@/lib/meherbanData';
 
 export const MeherbanSearchModal: React.FC = () => {
-  const { isSearchOpen, setIsSearchOpen, openQuickView, addToCart } = useMeherban();
+  const { products, isSearchOpen, setIsSearchOpen, openQuickView, addToCart } = useMeherban();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,7 +20,7 @@ export const MeherbanSearchModal: React.FC = () => {
 
   if (!isSearchOpen) return null;
 
-  const filteredProducts = MEHERBAN_PRODUCTS.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     const matchesCategory =
       selectedCategory === 'ALL' ||
       product.categoryName.toUpperCase() === selectedCategory.toUpperCase();

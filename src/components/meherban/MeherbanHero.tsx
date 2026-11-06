@@ -42,23 +42,25 @@ const HERO_SLIDES = [
 
 export const MeherbanHero: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { setActiveCategory } = useMeherban();
+  const { setActiveCategory, heroSlides } = useMeherban();
+
+  const slides = heroSlides && heroSlides.length > 0 ? heroSlides : HERO_SLIDES;
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 8000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const slide = HERO_SLIDES[currentSlide];
+  const slide = slides[currentSlide % slides.length];
 
   const handlePrev = () => {
-    setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   const handleNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
   return (
@@ -188,7 +190,7 @@ export const MeherbanHero: React.FC = () => {
               <div className="lg:hidden absolute bottom-4 left-4 flex items-center gap-2 font-mono text-[11px] text-neutral-300">
                 <span>0{currentSlide + 1}</span>
                 <span className="w-4 h-[1px] bg-neutral-400"></span>
-                <span className="text-neutral-500">0{HERO_SLIDES.length}</span>
+                <span className="text-neutral-500">0{slides.length}</span>
               </div>
             </div>
           </div>

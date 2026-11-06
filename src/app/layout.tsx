@@ -3,6 +3,8 @@ import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/authContext';
 import { LanguageProvider } from '@/lib/i18n';
+import { MeherbanProvider } from '@/context/MeherbanContext';
+import { MeherbanPixel } from '@/components/meherban/MeherbanPixel';
 
 const playfair = Playfair_Display({
   variable: '--font-playfair',
@@ -38,7 +40,10 @@ export default function RootLayout({
       <body className="min-h-screen bg-[#FAFAF8] text-[#141414] font-sans selection:bg-[#231d1a] selection:text-white">
         <AuthProvider>
           <LanguageProvider>
-            {children}
+            <MeherbanProvider>
+              <MeherbanPixel />
+              {children}
+            </MeherbanProvider>
           </LanguageProvider>
         </AuthProvider>
       </body>

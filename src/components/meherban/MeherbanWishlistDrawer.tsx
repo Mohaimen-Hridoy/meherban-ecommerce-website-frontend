@@ -3,10 +3,10 @@
 import React from 'react';
 import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
-import { MEHERBAN_PRODUCTS } from '@/lib/meherbanData';
 
 export const MeherbanWishlistDrawer: React.FC = () => {
   const {
+    products,
     wishlist,
     isWishlistOpen,
     setIsWishlistOpen,
@@ -18,7 +18,7 @@ export const MeherbanWishlistDrawer: React.FC = () => {
   if (!isWishlistOpen) return null;
 
   const handleMoveToCart = (productId: string) => {
-    const product = MEHERBAN_PRODUCTS.find((p) => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (product) {
       addToCart(product, product.sizes[0], product.colorSwatches[0]?.name, 1);
       toggleWishlist(product);
@@ -63,7 +63,7 @@ export const MeherbanWishlistDrawer: React.FC = () => {
             </div>
           ) : (
             wishlist.map((item) => {
-              const fullProduct = MEHERBAN_PRODUCTS.find((p) => p.id === item.productId);
+              const fullProduct = products.find((p) => p.id === item.productId);
               return (
                 <div
                   key={item.productId}

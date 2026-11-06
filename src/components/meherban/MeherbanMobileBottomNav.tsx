@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, LayoutGrid, Heart, ShoppingBag, User } from 'lucide-react';
+import { Home, ShoppingBag, Heart, User, LayoutGrid } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
 
 export const MeherbanMobileBottomNav: React.FC = () => {
@@ -12,6 +12,7 @@ export const MeherbanMobileBottomNav: React.FC = () => {
     setIsWishlistOpen,
     setActiveCategory,
     deviceView,
+    authRole,
   } = useMeherban();
 
   const isSimulatedMobile = deviceView === 'mobile' || deviceView === 'split';
@@ -35,14 +36,13 @@ export const MeherbanMobileBottomNav: React.FC = () => {
           <span className="text-[10px] font-bold tracking-tight mt-0.5">Home</span>
         </a>
 
-        {/* Categories */}
+        {/* Collections / Categories */}
         <a
           href="#collections"
-          onClick={() => setActiveCategory('All')}
           className="flex flex-col items-center justify-center py-0.5 px-2 text-neutral-500 hover:text-neutral-900 group"
         >
           <LayoutGrid className="w-5 h-5 stroke-[1.6]" />
-          <span className="text-[10px] font-medium tracking-tight mt-0.5">Categories</span>
+          <span className="text-[10px] font-medium tracking-tight mt-0.5">Shop</span>
         </a>
 
         {/* Wishlist */}
@@ -53,11 +53,11 @@ export const MeherbanMobileBottomNav: React.FC = () => {
         >
           <Heart className="w-5 h-5 stroke-[1.6]" />
           {wishlistCount > 0 && (
-            <span className="absolute top-0 right-2 w-3.5 h-3.5 bg-neutral-900 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 right-2 w-3.5 h-3.5 bg-neutral-900 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
               {wishlistCount}
             </span>
           )}
-          <span className="text-[10px] font-medium tracking-tight mt-0.5">Wishlist</span>
+          <span className="text-[10px] font-medium tracking-tight mt-0.5">Saved</span>
         </button>
 
         {/* Cart */}
@@ -67,21 +67,28 @@ export const MeherbanMobileBottomNav: React.FC = () => {
           className="relative flex flex-col items-center justify-center py-0.5 px-2 text-neutral-500 hover:text-neutral-900 group"
         >
           <ShoppingBag className="w-5 h-5 stroke-[1.6]" />
-          <span className="absolute top-0 right-2 w-3.5 h-3.5 bg-neutral-900 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-            {cartCount}
-          </span>
+          {cartCount > 0 && (
+            <span className="absolute -top-1 right-2 w-3.5 h-3.5 bg-neutral-900 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
           <span className="text-[10px] font-medium tracking-tight mt-0.5">Cart</span>
         </button>
 
-        {/* Account */}
-        <button
-          type="button"
-          onClick={() => alert('MEHERBAN Account: Member VIP privileges active')}
-          className="flex flex-col items-center justify-center py-0.5 px-2 text-neutral-500 hover:text-neutral-900 group"
+        {/* Discreet Login / Account Tab */}
+        <a
+          href={authRole === 'SELLER' ? '/seller' : authRole === 'ADMIN' ? '/admin' : '/login'}
+          className="relative flex flex-col items-center justify-center py-0.5 px-2 text-neutral-500 hover:text-neutral-900 group"
+          title="Login / অ্যাকাউন্ট"
         >
           <User className="w-5 h-5 stroke-[1.6]" />
-          <span className="text-[10px] font-medium tracking-tight mt-0.5">Account</span>
-        </button>
+          {authRole && (
+            <span className="absolute top-0.5 right-2.5 w-2 h-2 bg-emerald-500 rounded-full" />
+          )}
+          <span className="text-[10px] font-medium tracking-tight mt-0.5">
+            {authRole ? (authRole === 'SELLER' ? 'Seller' : 'Admin') : 'Login'}
+          </span>
+        </a>
       </div>
     </nav>
   );

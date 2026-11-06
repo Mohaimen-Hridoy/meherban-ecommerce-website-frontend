@@ -6,7 +6,8 @@ import { MEHERBAN_CATEGORIES } from '@/lib/meherbanData';
 import { useMeherban } from '@/context/MeherbanContext';
 
 export const MeherbanCollections: React.FC = () => {
-  const { setActiveCategory } = useMeherban();
+  const { setActiveCategory, categories } = useMeherban();
+  const displayCategories = categories && categories.length > 0 ? categories : MEHERBAN_CATEGORIES;
 
   return (
     <section id="collections" className="py-10 sm:py-16 bg-[#FAF9F6] text-neutral-900">
@@ -37,7 +38,7 @@ export const MeherbanCollections: React.FC = () => {
           - Mobile: EXACT 2x2 grid (grid-cols-2) matching the mobile screenshot!
         */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
-          {MEHERBAN_CATEGORIES.map((category) => (
+          {displayCategories.map((category) => (
             <div
               key={category.id}
               onClick={() => setActiveCategory(category.name)}

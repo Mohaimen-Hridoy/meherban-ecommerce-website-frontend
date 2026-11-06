@@ -87,9 +87,5 @@ function StorefrontContent() {
 }
 
 export default function Home() {
-  return (
-    <MeherbanProvider>
-      <StorefrontContent />
-    </MeherbanProvider>
-  );
+  return <StorefrontContent />;
 }
