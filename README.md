@@ -1,80 +1,100 @@
-# 🛒 BazarPool — Frontend Web Application
+# 💎 MEHERBAN — Luxury Fashion E-Commerce Storefront
 
-[![Next.js](https://img.shields.io/badge/Next.js-16+-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
-**BazarPool Frontend** is a modern, high-performance web interface built with **Next.js 16 (App Router + Turbopack)** and **Tailwind CSS**. It connects community buyers, hostel managers, wholesale agricultural producers, and neighborhood hub coordinators.
+**MEHERBAN** ("WEAR YOUR STORY") is an exclusive high-conversion luxury fashion e-commerce platform optimized specifically for **Facebook & Instagram ad boost traffic** in Bangladesh. Built with **Next.js 16 (App Router + Turbopack)** and **Tailwind CSS**.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Core Features
 
-1. **Active Wholesale Pool Explorer**:
-   - Live progress bars tracking committed units vs target volume.
-   - Real-time search by commodity name and neighborhood hub/city filter.
-   - Instant calculation of wholesale price vs retail savings.
+1. **🚀 100% Frictionless Guest Checkout (Zero Login Required)**:
+   - Designed for cold ad traffic from Instagram and Facebook.
+   - Customers never see forced login/registration walls; orders complete in seconds with just Name, Mobile, and Address.
+   - Real-time Bangladeshi phone validation (`/^01[3-9]\d{8}$/`).
 
-2. **Dedicated Campaign Details Page (`/campaigns/[id]`)**:
-   - Complete product specifications, hub address, and seller verification.
-   - 1-click commitment modal with virtual double-entry wallet reservation.
+2. **💵 Strictly Cash on Delivery (COD Only)**:
+   - Eliminates drop-offs from failed payment gateways.
+   - "পণ্য হাতে পেয়ে দেখে মূল্য পরিশোধ করবেন — কোনো অগ্রিম পেমেন্টের ঝুঁকি নেই।"
+   - Automatic free delivery calculation for orders over ৳1,999.
 
-3. **Multi-Role User Dashboard**:
-   - **Consumer**: View active commitments, 1-click cancel with instant fund release, and cryptographic QR pickup passes.
-   - **Supplier**: Wholesale campaign launcher modal, product catalog management, and dispatch tracking.
-   - **Admin**: System-wide analytics, transaction volumes, and pickup hub registrations.
-   - **All**: Double-entry virtual wallet ledger with auditable top-up and debit histories.
+3. **🛍️ Clean & Focused Storefront Navigation**:
+   - Zero internal seller or admin badges visible to casual shoppers.
+   - Clean luxury navigation: Hero, Collections, Trending, Lookbook, Instagram Showcase.
+   - Subtle account portal entrypoint linking to `/login`.
 
-4. **Live QR Pickup Scanner (`/pickup-verifier`)**:
-   - Camera-based live scanner and manual code entry for hub coordinators.
-   - Strict one-time redemption enforcement (409 Conflict protection).
+4. **⚡ Single-Seller & Management Hub (`/seller` & `/admin`)**:
+   - **Direct Storage Photo Uploads**: Drag-and-drop or select files directly from laptop or mobile storage with automatic Cloudinary CDN optimization.
+   - **Real-Time Stock Controls**: 1-click In Stock / Unavailable toggles and stock quantity incrementors.
+   - **Frontpage Visual Studio**: Modify hero slides, category cards, promo banners, and Instagram feed live.
+   - **1-Click Courier Bulk Export**: Download Steadfast & Pathao ready booking CSVs directly from the orders management panel.
 
-5. **In-App Real-Time Notification Center**:
-   - Bell icon with unread badges, notifications on refunds, order arrival, and campaign lock.
+5. **🎯 Meta Pixel Attribution**:
+   - Client-side Meta Pixel loader firing real-time `Purchase` conversion events with BDT currency and order values for ROAS optimization.
 
 ---
 
-## 🚀 Local Setup & Execution
+## 🏛️ Architecture Flow
+
+```mermaid
+flowchart TD
+    subgraph AdTraffic["Social Media Ad Boost"]
+        FB["Facebook Ads"] --> Store["MEHERBAN Storefront"]
+        IG["Instagram Ads"] --> Store
+    end
+
+    subgraph CustomerExperience["Customer Experience"]
+        Store --> QuickView["Product Quick View / Cart Drawer"]
+        QuickView --> GuestForm["Fast Guest Checkout (3 Fields)"]
+        GuestForm --> CODOrder["Cash on Delivery Confirmation"]
+        CODOrder --> Pixel["Meta Pixel 'Purchase' Event Fired"]
+        CODOrder --> WhatsApp["1-Click WhatsApp Support Confirmation"]
+    end
+
+    subgraph Management["Store Management"]
+        Login["Discreet Portal Login (/login)"] --> SellerHub["Seller Studio (/seller)"]
+        Login --> AdminHub["Super Admin Dashboard (/admin)"]
+        SellerHub --> CloudinaryUpload["Direct Device Photo Upload (Cloudinary)"]
+        SellerHub --> CourierCSV["Steadfast / Pathao Bulk CSV Export"]
+    end
+
+    CODOrder -->|REST API| Backend["Express API + Neon PostgreSQL"]
+    CloudinaryUpload -->|Multipart Stream| Backend
+```
+
+---
+
+## 🚀 Local Setup & Installation
 
 ### Prerequisites
 - Node.js v18+
-- BazarPool Backend running on `http://localhost:5000`
+- MEHERBAN Backend running on `http://localhost:5000`
 
 ### Step 1: Install Dependencies
 ```bash
 npm install
 ```
 
-### Step 2: Configure Environment Variables
+### Step 2: Configure Environment
 Copy `.env.example` to `.env.local`:
-```bash
-cp .env.example .env.local
-```
-Ensure `NEXT_PUBLIC_API_URL` points to your backend:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+NEXT_PUBLIC_FACEBOOK_PIXEL_ID="" # Optional: Your Meta Pixel ID
 ```
 
 ### Step 3: Run Development Server
 ```bash
 npm run dev
 ```
-Open **`http://localhost:3000`** in your browser.
+Open [http://localhost:4000](http://localhost:4000) in your browser.
 
 ---
 
-## 🔑 Demo Evaluation Accounts
-
-| Role | Email | Password | Primary Capabilities |
-| :--- | :--- | :--- | :--- |
-| **Consumer** | `consumer@gmail.com` | `password123` | Commit to pools, view wallet, view QR Pickup Passes |
-| **Wholesaler** | `supplier@agrofarm.com` | `password123` | Launch wholesale pools, catalog products, dispatch orders |
-| **Hub Lead** | `coordinator@dhanmondi.com` | `password123` | Verify QR token codes, authorize product handovers |
-| **Admin** | `admin@bazarpool.com` | `password123` | Full system metrics, register hubs, and audit logs |
-
----
-
-## 👨‍💻 Author
-- **Author:** Mohaimen Hridoy
-- **Repository:** [BazarPool-frontend](https://github.com/Mohaimen-Hridoy/BazarPool-frontend)
+## 🔑 Demo Management Credentials
+| Role | Login URL | Email / Username | Password |
+|---|---|---|---|
+| **Seller** | `/login` or `/seller` | `seller@meherban.com` | `seller123` |
+| **Super Admin** | `/login` or `/admin` | `admin@meherban.com` | `admin123` |
