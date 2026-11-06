@@ -475,7 +475,7 @@ export default function SellerPage() {
                 <input
                   type="password"
                   required
-                  placeholder="পাসওয়ার্ড লিখুন (Default: seller123)"
+                  placeholder="পাসওয়ার্ড লিখুন"
                   value={passwordInput}
                   onChange={(e) => {
                     setPasswordInput(e.target.value);
@@ -487,7 +487,7 @@ export default function SellerPage() {
               </div>
               {authError && (
                 <p className="text-rose-600 text-[11px] mt-1.5 flex items-center gap-1">
-                  <AlertTriangle className="w-3.5 h-3.5" /> ভুল ইমেইল বা পাসওয়ার্ড! &quot;seller@meherban.com&quot; এবং &quot;seller123&quot; ব্যবহার করুন।
+                  <AlertTriangle className="w-3.5 h-3.5" /> ভুল ইমেইল বা পাসওয়ার্ড! সঠিক তথ্য দিয়ে আবার চেষ্টা করুন।
                 </p>
               )}
             </div>
@@ -501,24 +501,13 @@ export default function SellerPage() {
             </button>
           </form>
 
-          <div className="pt-2 border-t border-neutral-100 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={handleDemoSellerLogin}
-              className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 border border-emerald-200"
-            >
-              <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600" />
-              <span>1-ক্লিক ডেমো সেলার লগইন (seller@meherban.com)</span>
-            </button>
-
-            <div className="flex items-center justify-between text-xs text-neutral-500 pt-1">
-              <Link href="/" className="hover:text-black transition-colors">
-                &larr; লাইভ শপ
-              </Link>
-              <Link href="/admin" className="text-amber-700 font-semibold hover:underline">
-                সুপার অ্যাডমিন লগইন &rarr;
-              </Link>
-            </div>
+          <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
+            <Link href="/" className="hover:text-black transition-colors">
+              &larr; লাইভ শপ
+            </Link>
+            <Link href="/login" className="text-amber-700 font-semibold hover:underline">
+              পোর্টাল লগইন &rarr;
+            </Link>
           </div>
         </div>
       </div>
