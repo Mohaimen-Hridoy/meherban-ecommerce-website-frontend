@@ -11,20 +11,11 @@ export const MeherbanMobileBottomNav: React.FC = () => {
     setIsCartOpen,
     setIsWishlistOpen,
     setActiveCategory,
-    deviceView,
     authRole,
   } = useMeherban();
 
-  const isSimulatedMobile = deviceView === 'mobile' || deviceView === 'split';
-
   return (
-    <nav
-      className={`bg-white/95 backdrop-blur-md border-t border-neutral-200/90 px-2 py-2 shadow-lg z-40 transition-all ${
-        isSimulatedMobile
-          ? 'sticky bottom-0 w-full'
-          : 'fixed bottom-0 left-0 right-0 sm:hidden'
-      }`}
-    >
+    <nav className="fixed bottom-0 left-0 right-0 sm:hidden bg-white/95 backdrop-blur-md border-t border-neutral-200/90 px-2 py-2 shadow-lg z-40 transition-all">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {/* Home */}
         <a

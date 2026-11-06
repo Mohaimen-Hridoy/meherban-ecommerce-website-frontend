@@ -25,14 +25,11 @@ export const MeherbanHeader: React.FC = () => {
     setIsSearchOpen,
     activeCategory,
     setActiveCategory,
-    deviceView,
     authRole,
   } = useMeherban();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-
-  const isSimulatedMobile = deviceView === 'mobile';
 
   const navLinks = [
     { label: 'Home', href: '#hero', category: 'Home' },
@@ -58,8 +55,8 @@ export const MeherbanHeader: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 transition-all shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Hamburger Button (shown on small screens or in simulated mobile) */}
-            <div className={`flex items-center ${!isSimulatedMobile ? 'lg:hidden' : ''}`}>
+            {/* Hamburger Button (shown on mobile/tablet) */}
+            <div className="flex items-center lg:hidden">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -82,59 +79,55 @@ export const MeherbanHeader: React.FC = () => {
               </a>
             </div>
 
-            {/* Desktop Navigation Links (hidden in simulated mobile) */}
-            {!isSimulatedMobile && (
-              <nav className="hidden lg:flex items-center gap-7">
-                {navLinks.map((link) => {
-                  const isActive = activeCategory === link.category;
-                  return (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      onClick={() => handleNavClick(link.category)}
-                      className={`relative text-[13.5px] font-medium tracking-wide transition-colors py-1 ${
-                        isActive
-                          ? 'text-neutral-950 font-semibold'
-                          : 'text-neutral-600 hover:text-neutral-950'
-                      }`}
-                    >
-                      {link.label}
-                      {isActive && (
-                        <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-neutral-950 rounded-full" />
-                      )}
-                    </a>
-                  );
-                })}
-              </nav>
-            )}
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-7">
+              {navLinks.map((link) => {
+                const isActive = activeCategory === link.category;
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => handleNavClick(link.category)}
+                    className={`relative text-[13.5px] font-medium tracking-wide transition-colors py-1 ${
+                      isActive
+                        ? 'text-neutral-950 font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-950'
+                    }`}
+                  >
+                    {link.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-neutral-950 rounded-full" />
+                    )}
+                  </a>
+                );
+              })}
+            </nav>
 
             {/* Header Right Actions */}
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Desktop Search Bar */}
-              {!isSimulatedMobile && (
-                <div className="hidden md:flex items-center">
-                  <form
-                    onSubmit={handleSearchSubmit}
-                    className="relative flex items-center"
-                  >
-                    <Search className="absolute left-3.5 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      onFocus={() => setIsSearchOpen(true)}
-                      placeholder="Search products..."
-                      className="w-44 lg:w-56 pl-9 pr-3 py-1.5 text-xs bg-neutral-100/80 hover:bg-neutral-100 border border-transparent focus:border-neutral-300 focus:bg-white rounded-full transition-all outline-none text-neutral-800 placeholder:text-neutral-400"
-                    />
-                  </form>
-                </div>
-              )}
+              <div className="hidden md:flex items-center">
+                <form
+                  onSubmit={handleSearchSubmit}
+                  className="relative flex items-center"
+                >
+                  <Search className="absolute left-3.5 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onFocus={() => setIsSearchOpen(true)}
+                    placeholder="Search products..."
+                    className="w-44 lg:w-56 pl-9 pr-3 py-1.5 text-xs bg-neutral-100/80 hover:bg-neutral-100 border border-transparent focus:border-neutral-300 focus:bg-white rounded-full transition-all outline-none text-neutral-800 placeholder:text-neutral-400"
+                  />
+                </form>
+              </div>
 
               {/* Mobile Search Icon */}
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(true)}
-                className={`${!isSimulatedMobile ? 'md:hidden' : ''} p-1.5 text-neutral-800 hover:text-black transition-colors`}
+                className="md:hidden p-1.5 text-neutral-800 hover:text-black transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5 stroke-[1.6]" />
