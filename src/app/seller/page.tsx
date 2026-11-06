@@ -455,7 +455,7 @@ export default function SellerPage() {
                 <input
                   type="email"
                   required
-                  placeholder="seller@meherban.com"
+                  placeholder="আপনার বিক্রেতা ইমেইল লিখুন"
                   value={emailInput}
                   onChange={(e) => {
                     setEmailInput(e.target.value);
@@ -505,9 +505,7 @@ export default function SellerPage() {
             <Link href="/" className="hover:text-black transition-colors">
               &larr; লাইভ শপ
             </Link>
-            <Link href="/login" className="text-amber-700 font-semibold hover:underline">
-              পোর্টাল লগইন &rarr;
-            </Link>
+            <span className="font-mono text-[10px] text-neutral-400">MEHERBAN SELLER</span>
           </div>
         </div>
       </div>

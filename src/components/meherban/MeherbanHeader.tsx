@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   Search,
-  User,
   Heart,
   ShoppingBag,
   Menu,
@@ -133,19 +132,6 @@ export const MeherbanHeader: React.FC = () => {
                 <Search className="w-5 h-5 stroke-[1.6]" />
               </button>
 
-              {/* Account / Portal Login Link (Discreet login for Seller & Admin) */}
-              <a
-                href={authRole === 'SELLER' ? '/seller' : authRole === 'ADMIN' ? '/admin' : '/login'}
-                className="relative p-1.5 text-neutral-800 hover:text-black transition-colors rounded-full hover:bg-neutral-100/70"
-                aria-label="Account Login"
-                title={authRole ? `Logged in (${authRole})` : 'Login / অ্যাকাউন্ট'}
-              >
-                <User className="w-5 h-5 stroke-[1.6]" />
-                {authRole && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
-                )}
-              </a>
-
               {/* Wishlist Heart Icon with Count Badge */}
               <button
                 type="button"
@@ -228,18 +214,6 @@ export const MeherbanHeader: React.FC = () => {
               ))}
 
               <div className="pt-6 mt-6 border-t border-neutral-100 space-y-2.5">
-                <a
-                  href={authRole === 'SELLER' ? '/seller' : authRole === 'ADMIN' ? '/admin' : '/login'}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-2.5 px-3.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold shadow-xs transition-colors"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <User className="w-4 h-4 text-neutral-300" />
-                    <span>{authRole ? (authRole === 'SELLER' ? 'বিক্রেতা ড্যাশবোর্ড' : 'অ্যাডমিন ড্যাশবোর্ড') : 'লগইন (Login / Account)'}</span>
-                  </span>
-                  <ChevronRight className="w-4 h-4 opacity-75" />
-                </a>
-
                 <div className="bg-[#FAF7F2] p-4 rounded-xl border border-neutral-200/60">
                   <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-neutral-900">
                     <Sparkles className="w-3.5 h-3.5 text-amber-600" />

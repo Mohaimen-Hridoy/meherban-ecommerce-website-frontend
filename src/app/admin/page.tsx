@@ -361,9 +361,7 @@ export default function AdminPage() {
             <Link href="/" className="hover:text-black transition-colors">
               &larr; লাইভ শপ
             </Link>
-            <Link href="/login" className="text-emerald-700 font-semibold hover:underline">
-              পোর্টাল লগইন &rarr;
-            </Link>
+            <span className="font-mono text-[10px] text-neutral-400">MEHERBAN ROOT</span>
           </div>
         </div>
       </div>
