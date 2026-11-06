@@ -38,15 +38,17 @@ export const MeherbanTrending: React.FC = () => {
 
   const handleAddToCartClick = (e: React.MouseEvent, product: MeherbanProduct) => {
     e.stopPropagation();
-    if (!product.inStock) return;
     const chosenColor = selectedColors[product.id] || product.colorSwatches[0]?.name;
+    const swatch = product.colorSwatches.find((c) => c.name === chosenColor);
+    if (!product.inStock || (swatch && swatch.inStock === false)) return;
     addToCart(product, product.sizes[0], chosenColor, 1);
   };
 
   const handleBuyNowClick = (e: React.MouseEvent, product: MeherbanProduct) => {
     e.stopPropagation();
-    if (!product.inStock) return;
     const chosenColor = selectedColors[product.id] || product.colorSwatches[0]?.name;
+    const swatch = product.colorSwatches.find((c) => c.name === chosenColor);
+    if (!product.inStock || (swatch && swatch.inStock === false)) return;
     directBuyNow(product, product.sizes[0], chosenColor, 1);
   };
 
@@ -125,7 +127,15 @@ export const MeherbanTrending: React.FC = () => {
             const isSaved = isWishlisted(product.id);
             const activeColor =
               selectedColors[product.id] || product.colorSwatches[0]?.name;
-            const isAvailable = product.inStock && (product.stockQuantity === undefined || product.stockQuantity > 0);
+            const activeSwatch = product.colorSwatches.find((c) => c.name === activeColor);
+            const isSwatchAvailable = activeSwatch
+              ? activeSwatch.inStock !== false &&
+                (activeSwatch.stockQuantity === undefined || activeSwatch.stockQuantity > 0)
+              : true;
+            const isAvailable =
+              product.inStock &&
+              (product.stockQuantity === undefined || product.stockQuantity > 0) &&
+              isSwatchAvailable;
 
             return (
               <div
@@ -207,19 +217,28 @@ export const MeherbanTrending: React.FC = () => {
                   <div className="flex items-center gap-1 sm:gap-1.5 py-0.5">
                     {product.colorSwatches.map((swatch) => {
                       const isColorActive = activeColor === swatch.name;
+                      const swatchOut =
+                        swatch.inStock === false ||
+                        (swatch.stockQuantity !== undefined && swatch.stockQuantity <= 0);
                       return (
                         <button
                           key={swatch.name}
                           type="button"
                           onClick={(e) => handleColorClick(e, product.id, swatch.name)}
-                          title={swatch.name}
-                          className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border transition-all ${
+                          title={`${swatch.name}${swatchOut ? ' (স্টক শেষ)' : ''}`}
+                          className={`relative w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border transition-all ${
                             isColorActive
                               ? 'ring-1.5 ring-neutral-950 ring-offset-1 scale-110'
                               : 'border-neutral-300 hover:scale-105'
-                          }`}
+                          } ${swatchOut ? 'opacity-50' : ''}`}
                           style={{ backgroundColor: swatch.hex }}
-                        />
+                        >
+                          {swatchOut && (
+                            <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <span className="w-full h-[1px] bg-rose-600 rotate-45 transform" />
+                            </span>
+                          )}
+                        </button>
                       );
                     })}
                   </div>

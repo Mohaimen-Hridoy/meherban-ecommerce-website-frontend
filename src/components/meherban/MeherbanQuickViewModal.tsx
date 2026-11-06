@@ -31,9 +31,21 @@ export const MeherbanQuickViewModal: React.FC = () => {
   if (!quickViewProduct) return null;
 
   const isSaved = isWishlisted(quickViewProduct.id);
+
+  const activeColorSwatch = quickViewProduct.colorSwatches.find(
+    (c) => c.name.toLowerCase() === selectedColor.toLowerCase()
+  );
+
+  const isColorAvailable =
+    activeColorSwatch
+      ? activeColorSwatch.inStock !== false &&
+        (activeColorSwatch.stockQuantity === undefined || activeColorSwatch.stockQuantity > 0)
+      : true;
+
   const isAvailable =
     quickViewProduct.inStock &&
-    (quickViewProduct.stockQuantity === undefined || quickViewProduct.stockQuantity > 0);
+    (quickViewProduct.stockQuantity === undefined || quickViewProduct.stockQuantity > 0) &&
+    isColorAvailable;
 
   const handleAdd = () => {
     if (!isAvailable) return;
@@ -153,26 +165,55 @@ export const MeherbanQuickViewModal: React.FC = () => {
               </p>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-900 mb-2">
-                  Color: <span className="font-normal text-neutral-600">{selectedColor}</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  {quickViewProduct.colorSwatches.map((swatch) => (
-                    <button
-                      key={swatch.name}
-                      onClick={() => setSelectedColor(swatch.name)}
-                      className={`w-6 h-6 rounded-full border transition-all flex items-center justify-center ${
-                        selectedColor === swatch.name
-                          ? 'ring-2 ring-neutral-900 ring-offset-2 scale-110'
-                          : 'border-neutral-300 hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: swatch.hex }}
-                    >
-                      {selectedColor === swatch.name && (
-                        <Check className="w-3 h-3 text-white drop-shadow-md stroke-[3]" />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-neutral-900">
+                    Color: <span className="font-normal text-neutral-600">{selectedColor}</span>
+                    {activeColorSwatch && activeColorSwatch.inStock === false && (
+                      <span className="ml-2 text-rose-600 font-bold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded text-[10px]">
+                        স্টক শেষ (Unavailable)
+                      </span>
+                    )}
+                    {activeColorSwatch &&
+                      activeColorSwatch.inStock !== false &&
+                      activeColorSwatch.stockQuantity !== undefined &&
+                      activeColorSwatch.stockQuantity <= 5 &&
+                      activeColorSwatch.stockQuantity > 0 && (
+                        <span className="ml-2 text-amber-600 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[10px]">
+                          মাত্র {activeColorSwatch.stockQuantity}টি বাকি!
+                        </span>
                       )}
-                    </button>
-                  ))}
+                  </label>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {quickViewProduct.colorSwatches.map((swatch) => {
+                    const swatchOut =
+                      swatch.inStock === false ||
+                      (swatch.stockQuantity !== undefined && swatch.stockQuantity <= 0);
+                    const isSelected = selectedColor === swatch.name;
+                    return (
+                      <button
+                        key={swatch.name}
+                        type="button"
+                        onClick={() => setSelectedColor(swatch.name)}
+                        className={`relative w-7 h-7 rounded-full border transition-all flex items-center justify-center ${
+                          isSelected
+                            ? 'ring-2 ring-neutral-900 ring-offset-2 scale-110'
+                            : 'border-neutral-300 hover:scale-105'
+                        } ${swatchOut ? 'opacity-60' : ''}`}
+                        style={{ backgroundColor: swatch.hex }}
+                        title={`${swatch.name}${swatchOut ? ' (স্টক শেষ)' : ''}`}
+                      >
+                        {isSelected && !swatchOut && (
+                          <Check className="w-3.5 h-3.5 text-white drop-shadow-md stroke-[3]" />
+                        )}
+                        {swatchOut && (
+                          <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span className="w-full h-0.5 bg-rose-600 rotate-45 transform" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -265,8 +306,14 @@ export const MeherbanQuickViewModal: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <div className="p-3 bg-neutral-100 text-neutral-500 rounded-lg text-center text-xs font-medium">
-                  এই পণ্যটি বর্তমানে শেষ হয়ে গেছে (Out of Stock)। নতুন স্টক আসলে জানানো হবে।
+                <div className="p-3 bg-neutral-100 text-neutral-600 rounded-lg text-center text-xs font-medium">
+                  {!isColorAvailable ? (
+                    <span>
+                      দুঃখিত, <strong>&quot;{selectedColor}&quot;</strong> কালারটি বর্তমানে শেষ হয়ে গেছে (Unavailable)। অনুগ্রহ করে অন্য কোনো কালার বেছে নিন।
+                    </span>
+                  ) : (
+                    <span>এই পণ্যটি বর্তমানে শেষ হয়ে গেছে (Out of Stock)। নতুন স্টক আসলে জানানো হবে।</span>
+                  )}
                 </div>
               )}
             </div>

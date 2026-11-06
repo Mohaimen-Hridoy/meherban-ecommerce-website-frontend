@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   Plus,
   Trash2,
+  Check,
   Edit3,
   CheckCircle2,
   XCircle,
@@ -37,7 +38,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
-import { MeherbanProduct, MeherbanOrder } from '@/types/meherban';
+import { MeherbanProduct, MeherbanOrder, ColorSwatch } from '@/types/meherban';
 
 export default function SellerPage() {
   const {
@@ -96,9 +97,9 @@ export default function SellerPage() {
     categoryName: 'Men',
     images: [''],
     colorSwatches: [
-      { name: 'Black', hex: '#111111' },
-      { name: 'Grey', hex: '#666666' },
-    ],
+      { name: 'Black', hex: '#111111', inStock: true, stockQuantity: 15 },
+      { name: 'Grey', hex: '#666666', inStock: true, stockQuantity: 10 },
+    ] as ColorSwatch[],
     sizes: ['S', 'M', 'L', 'XL'],
     inStock: true,
     stockQuantity: '25',
@@ -112,64 +113,252 @@ export default function SellerPage() {
   const [invoiceOrder, setInvoiceOrder] = useState<MeherbanOrder | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Color Variants State for Custom Colors
+  const [customColorName, setCustomColorName] = useState('');
+  const [customColorHex, setCustomColorHex] = useState('#111111');
+  const [imageUrlInput, setImageUrlInput] = useState('');
 
-    if (!file.type.startsWith('image/')) {
-      addToast('অনুগ্রহ করে শুধুমাত্র ছবি (JPG, PNG, WebP) ফাইল সিলেক্ট করুন।', 'error');
+  // Popular Fashion Color Swatch Presets
+  const POPULAR_COLORS = [
+    { name: 'Black', hex: '#111111' },
+    { name: 'White', hex: '#FFFFFF' },
+    { name: 'Navy Blue', hex: '#0F172A' },
+    { name: 'Charcoal Grey', hex: '#4B5563' },
+    { name: 'Beige / Khaki', hex: '#D8C3A5' },
+    { name: 'Olive Green', hex: '#556B2F' },
+    { name: 'Maroon', hex: '#800000' },
+    { name: 'Chocolate Brown', hex: '#4A2C11' },
+    { name: 'Dusty Rose', hex: '#D98880' },
+    { name: 'Champagne Gold', hex: '#D4AF37' },
+  ];
+
+  // Standard Fashion Sizes
+  const STANDARD_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
+
+  // Toggle Preset Color Swatch
+  const handleToggleColorPreset = (color: { name: string; hex: string }) => {
+    const exists = productForm.colorSwatches.some(
+      (c) => c.name.toLowerCase() === color.name.toLowerCase()
+    );
+    if (exists) {
+      setProductForm((prev) => ({
+        ...prev,
+        colorSwatches: prev.colorSwatches.filter(
+          (c) => c.name.toLowerCase() !== color.name.toLowerCase()
+        ),
+      }));
+    } else {
+      setProductForm((prev) => ({
+        ...prev,
+        colorSwatches: [
+          ...prev.colorSwatches,
+          { name: color.name, hex: color.hex, inStock: true, stockQuantity: 10 },
+        ],
+      }));
+    }
+  };
+
+  // Add Custom Color Swatch
+  const handleAddCustomColor = () => {
+    if (!customColorName.trim()) {
+      addToast('অনুগ্রহ করে কালারের একটি নাম লিখুন (যেমন: Royal Blue)', 'error');
       return;
     }
+    const newColor: ColorSwatch = {
+      name: customColorName.trim(),
+      hex: customColorHex,
+      inStock: true,
+      stockQuantity: 10,
+    };
+    setProductForm((prev) => ({
+      ...prev,
+      colorSwatches: [
+        ...prev.colorSwatches.filter((c) => c.name.toLowerCase() !== newColor.name.toLowerCase()),
+        newColor,
+      ],
+    }));
+    setCustomColorName('');
+    addToast(`"${newColor.name}" কালার ভ্যারিয়েন্ট যুক্ত হয়েছে!`, 'success');
+  };
 
-    if (file.size > 10 * 1024 * 1024) {
-      addToast('ছবির সাইজ সর্বোচ্চ 10MB হতে পারবে।', 'error');
-      return;
+  // Toggle Individual Color In-Stock / Unavailable Status
+  const handleToggleColorStock = (colorName: string) => {
+    setProductForm((prev) => ({
+      ...prev,
+      colorSwatches: prev.colorSwatches.map((c) => {
+        if (c.name.toLowerCase() === colorName.toLowerCase()) {
+          const newInStock = !(c.inStock !== false);
+          return {
+            ...c,
+            inStock: newInStock,
+            stockQuantity: newInStock && (!c.stockQuantity || c.stockQuantity <= 0) ? 10 : c.stockQuantity,
+          };
+        }
+        return c;
+      }),
+    }));
+  };
+
+  // Update Individual Color Stock Quantity
+  const handleUpdateColorQuantity = (colorName: string, quantity: number) => {
+    const validQty = Math.max(0, quantity);
+    setProductForm((prev) => ({
+      ...prev,
+      colorSwatches: prev.colorSwatches.map((c) => {
+        if (c.name.toLowerCase() === colorName.toLowerCase()) {
+          return {
+            ...c,
+            stockQuantity: validQty,
+            inStock: validQty > 0 ? (c.inStock !== false) : false,
+          };
+        }
+        return c;
+      }),
+    }));
+  };
+
+  // Remove Color Swatch
+  const handleRemoveColor = (nameToRemove: string) => {
+    setProductForm((prev) => ({
+      ...prev,
+      colorSwatches: prev.colorSwatches.filter((c) => c.name !== nameToRemove),
+    }));
+  };
+
+  // Toggle Size
+  const handleToggleSize = (size: string) => {
+    const exists = productForm.sizes.includes(size);
+    if (exists) {
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: prev.sizes.filter((s) => s !== size),
+      }));
+    } else {
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: [...prev.sizes, size],
+      }));
     }
+  };
+
+  // Multiple Product Images Upload Handler (Supports 1 or many photos)
+  const handleMultipleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setIsUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
+    addToast(`${files.length}টি ছবি প্রসেস ও আপলোড হচ্ছে...`, 'info');
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      const res = await fetch(`${apiUrl}/meherban/upload`, {
-        method: 'POST',
-        body: formData,
+    try {
+      const validFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
+      if (validFiles.length === 0) {
+        addToast('অনুগ্রহ করে শুধুমাত্র ছবি (JPG, PNG, WebP) ফাইল নির্বাচন করুন।', 'error');
+        return;
+      }
+
+      const uploadedUrls: string[] = [];
+      for (const file of validFiles) {
+        const url = await uploadSingleImage(file);
+        if (url) uploadedUrls.push(url);
+      }
+
+      setProductForm((prev) => {
+        const currentValid = prev.images.filter((img) => img.trim().length > 0);
+        return {
+          ...prev,
+          images: [...currentValid, ...uploadedUrls],
+        };
       });
 
-      const data = await res.json();
-      if (data.success && data.data?.url) {
-        setProductForm((prev) => ({
-          ...prev,
-          images: [data.data.url],
-        }));
-        const providerName = data.data.provider === 'cloudinary' ? 'Cloudinary' : 'সার্ভার';
-        addToast(`ছবি সফলভাবে ${providerName}-এ আপলোড হয়েছে!`, 'success');
-      } else {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setProductForm((prev) => ({
-            ...prev,
-            images: [reader.result as string],
-          }));
-          addToast('ছবি প্রিভিউতে যুক্ত হয়েছে।', 'info');
-        };
-        reader.readAsDataURL(file);
-      }
+      addToast(`${uploadedUrls.length}টি ছবি সফলভাবে গ্যালারিতে যুক্ত হয়েছে!`, 'success');
     } catch {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProductForm((prev) => ({
-          ...prev,
-          images: [reader.result as string],
-        }));
-        addToast('ছবি প্রিভিউতে যুক্ত হয়েছে (লোকাল মোড)।', 'info');
-      };
-      reader.readAsDataURL(file);
+      addToast('ছবি আপলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
     } finally {
       setIsUploadingImage(false);
       e.target.value = '';
     }
+  };
+
+  // Remove Image by Index
+  const handleRemoveImage = (indexToRemove: number) => {
+    setProductForm((prev) => {
+      const filtered = prev.images.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...prev,
+        images: filtered.length > 0 ? filtered : [''],
+      };
+    });
+    addToast('ছবিটি সরানো হয়েছে।', 'info');
+  };
+
+  // Set as Cover / Primary Image
+  const handleSetPrimaryImage = (indexToPrimary: number) => {
+    setProductForm((prev) => {
+      const target = prev.images[indexToPrimary];
+      const rest = prev.images.filter((_, idx) => idx !== indexToPrimary);
+      return {
+        ...prev,
+        images: [target, ...rest],
+      };
+    });
+    addToast('মূল কভার ছবি হিসেবে সেট করা হয়েছে!', 'success');
+  };
+
+  // Add Image via Direct URL
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    setProductForm((prev) => {
+      const current = prev.images.filter((img) => img.trim().length > 0);
+      return {
+        ...prev,
+        images: [...current, imageUrlInput.trim()],
+      };
+    });
+    setImageUrlInput('');
+    addToast('ছবির লিঙ্ক যুক্ত হয়েছে!', 'success');
+  };
+
+  // Client-Side Canvas Image Compression to prevent payload limits and optimize loading
+  const compressImageFile = (file: File, maxWidth = 1200, quality = 0.82): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth || height > maxWidth) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(event.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          try {
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } catch {
+            resolve(event.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(event.target?.result as string);
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
   };
 
   const uploadSingleImage = async (file: File): Promise<string> => {
@@ -187,11 +376,8 @@ export default function SellerPage() {
       }
     } catch {}
 
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
+    // Fallback to client-side compressed base64
+    return await compressImageFile(file);
   };
 
   const handleFrontpageImageUpload = async (
@@ -290,7 +476,12 @@ export default function SellerPage() {
       originalPrice: p.originalPrice ? String(p.originalPrice) : '',
       categoryName: p.categoryName,
       images: p.images.length > 0 ? p.images : [''],
-      colorSwatches: p.colorSwatches.length > 0 ? p.colorSwatches : [{ name: 'Default', hex: '#111111' }],
+      colorSwatches: p.colorSwatches.length > 0 ? p.colorSwatches.map((c) => ({
+        name: c.name,
+        hex: c.hex,
+        inStock: c.inStock !== false,
+        stockQuantity: c.stockQuantity !== undefined ? c.stockQuantity : 10,
+      })) : [{ name: 'Black', hex: '#111111', inStock: true, stockQuantity: 15 }],
       sizes: p.sizes.length > 0 ? p.sizes : ['Standard'],
       inStock: p.inStock,
       stockQuantity: String(p.stockQuantity ?? 20),
@@ -1669,85 +1860,336 @@ export default function SellerPage() {
                 </button>
               </div>
 
-              {/* Product Image Section (100% Direct Device Storage Upload) */}
+              {/* Product Gallery Section (Multiple Photos Upload from Mobile/Laptop) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block font-semibold text-neutral-800 text-xs">
-                    পণ্যের ছবি (Device Storage থেকে আপলোড) <span className="text-rose-500">*</span>
-                  </label>
+                  <div>
+                    <label className="block font-semibold text-neutral-800 text-xs">
+                      পণ্যের ছবিসমূহ (Gallery - একাধিক ছবি যোগ করতে পারবেন) <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[11px] text-neutral-500">
+                      প্রথম ছবিটি কভার ছবি হিসেবে প্রদর্শিত হবে।
+                    </span>
+                  </div>
                   <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
-                    মোবাইল গ্যালারি বা ল্যাপটপ থেকে ছবি দিন
+                    {productForm.images.filter((img) => img.trim().length > 0).length}টি ছবি যুক্ত আছে
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  {productForm.images[0] && productForm.images[0].trim().length > 0 ? (
-                    <div className="flex items-center gap-3 p-3 bg-neutral-50 border border-neutral-200 rounded-xl">
-                      <img
-                        src={productForm.images[0]}
-                        alt="Product preview"
-                        className="w-16 h-16 object-cover rounded-lg border border-neutral-200 bg-white shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-neutral-900 truncate">
-                          ছবি সফলভাবে যুক্ত হয়েছে
-                        </p>
-                        <p className="text-[10px] text-neutral-500 truncate mt-0.5">
-                          {productForm.images[0].startsWith('data:')
-                            ? 'ডিভাইস লোকাল স্টোরেজ ছবি'
-                            : productForm.images[0]}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <label className="text-[11px] font-semibold text-neutral-800 hover:text-black underline cursor-pointer">
-                            <span>অন্য ছবি দিন (Replace)</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              disabled={isUploadingImage}
-                              onChange={handleImageFileUpload}
-                              className="hidden"
-                            />
-                          </label>
-                          <span className="text-neutral-300">·</span>
-                          <button
-                            type="button"
-                            onClick={() => setProductForm({ ...productForm, images: [''] })}
-                            className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 underline"
+                {/* Uploaded Gallery Grid */}
+                {productForm.images.filter((img) => img.trim().length > 0).length > 0 ? (
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                      {productForm.images
+                        .filter((img) => img.trim().length > 0)
+                        .map((imgUrl, idx) => (
+                          <div
+                            key={idx}
+                            className={`relative group aspect-square rounded-xl overflow-hidden border-2 bg-neutral-100 transition-all ${
+                              idx === 0 ? 'border-amber-500 shadow-xs' : 'border-neutral-200'
+                            }`}
                           >
-                            ছবি মুছে ফেলুন
-                          </button>
-                        </div>
+                            <img
+                              src={imgUrl}
+                              alt={`Product image ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+
+                            {/* Cover Badge */}
+                            {idx === 0 ? (
+                              <span className="absolute top-1.5 left-1.5 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs select-none">
+                                কভার ছবি (Cover)
+                              </span>
+                            ) : null}
+
+                            {/* Hover Actions Overlay */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                              {idx !== 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetPrimaryImage(idx)}
+                                  className="w-full py-1 bg-white hover:bg-neutral-100 text-neutral-900 rounded text-[10px] font-bold shadow-xs transition-colors"
+                                >
+                                  কভার বানান
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(idx)}
+                                className="w-full py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1 shadow-xs transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>মুছুন</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                      {/* Add More Photos Upload Tile */}
+                      <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50/70 hover:bg-amber-50/40 rounded-xl cursor-pointer transition-all p-2 text-center group">
+                        {isUploadingImage ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
+                        ) : (
+                          <>
+                            <div className="w-8 h-8 rounded-full bg-neutral-200 group-hover:bg-amber-200 flex items-center justify-center text-neutral-700 group-hover:text-amber-800 transition-colors mb-1">
+                              <Plus className="w-4 h-4 stroke-[2.5]" />
+                            </div>
+                            <span className="text-[10px] font-bold text-neutral-800">
+                              + আরো ছবি দিন
+                            </span>
+                            <span className="text-[8px] text-neutral-500">
+                              একাধিক নির্বাচনযোগ্য
+                            </span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={isUploadingImage}
+                          onChange={handleMultipleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  /* Empty State: Big Multi-Image Upload Box */
+                  <label className="relative flex flex-col items-center justify-center p-6 sm:p-8 border-2 border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50/70 hover:bg-amber-50/30 rounded-xl cursor-pointer transition-all group text-center">
+                    {isUploadingImage ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-7 h-7 animate-spin text-amber-600" />
+                        <span className="text-xs font-semibold text-neutral-700">ডিভাইস থেকে ছবি আপলোড হচ্ছে...</span>
                       </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-full bg-neutral-200/80 group-hover:bg-amber-100 flex items-center justify-center text-neutral-700 group-hover:text-amber-700 transition-colors mb-2.5">
+                          <Upload className="w-6 h-6 stroke-[1.8]" />
+                        </div>
+                        <span className="text-xs sm:text-sm font-bold text-neutral-800 group-hover:text-amber-950">
+                          মোবাইল গ্যালারি বা ল্যাপটপ থেকে ছবি সিলেক্ট করুন
+                        </span>
+                        <span className="text-[10px] text-neutral-500 mt-1">
+                          একসাথে একাধিক ছবি নির্বাচন করতে পারেন (JPG, PNG, WebP)
+                        </span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={isUploadingImage}
+                      onChange={handleMultipleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+
+                {/* Optional Direct Image URL Input */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="url"
+                    placeholder="অথবা ছবির অনলাইন লিঙ্ক (URL) পেস্ট করুন..."
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-neutral-300 focus:border-black outline-none bg-white text-neutral-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-900 text-white text-xs font-semibold rounded-lg shrink-0 transition-colors"
+                  >
+                    লিঙ্ক যোগ করুন
+                  </button>
+                </div>
+              </div>
+
+              {/* Color Variants & Per-Color Stock Section (কালার ভ্যারিয়েন্ট ও স্টক ব্যবস্থাপনা) */}
+              <div className="p-3.5 bg-neutral-50/90 rounded-xl border border-neutral-200 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block font-semibold text-neutral-900 text-xs">
+                      কালার ভ্যারিয়েন্ট ও স্টক সংখ্যা (Color Variants & Stock) <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[11px] text-neutral-500">
+                      কোন কালার স্টকে আছে বা শেষ এবং কয়টা আছে তা আলাদাভাবে নির্ধারণ করুন।
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-neutral-600 bg-neutral-200/70 px-2 py-0.5 rounded-full font-mono">
+                    {productForm.colorSwatches.length}টি কালার যুক্ত
+                  </span>
+                </div>
+
+                {/* Per-Color Stock & Status Manager Card List */}
+                <div className="space-y-2">
+                  {productForm.colorSwatches.length === 0 ? (
+                    <div className="p-3.5 bg-white rounded-xl border border-dashed border-neutral-300 text-center text-xs text-neutral-400">
+                      কোনো কালার সিলেক্ট করা হয়নি। নিচের প্যালেট থেকে সিলেক্ট করুন অথবা কাস্টম কালার যোগ করুন।
                     </div>
                   ) : (
-                    <label className="relative flex flex-col items-center justify-center p-6 sm:p-8 border-2 border-dashed border-neutral-300 hover:border-amber-500 bg-neutral-50/70 hover:bg-amber-50/30 rounded-xl cursor-pointer transition-all group">
-                      {isUploadingImage ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <Loader2 className="w-7 h-7 animate-spin text-amber-600" />
-                          <span className="text-xs font-semibold text-neutral-700">ডিভাইস থেকে ছবি আপলোড হচ্ছে...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="w-12 h-12 rounded-full bg-neutral-200/80 group-hover:bg-amber-100 flex items-center justify-center text-neutral-700 group-hover:text-amber-700 transition-colors mb-2.5">
-                            <Upload className="w-6 h-6 stroke-[1.8]" />
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {productForm.colorSwatches.map((color) => {
+                        const isInStock = color.inStock !== false;
+                        const qty = color.stockQuantity !== undefined ? color.stockQuantity : 10;
+                        return (
+                          <div
+                            key={color.name}
+                            className={`p-2.5 rounded-xl border flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 transition-all ${
+                              isInStock
+                                ? 'bg-white border-neutral-200 shadow-2xs'
+                                : 'bg-rose-50/40 border-rose-200/80'
+                            }`}
+                          >
+                            {/* Color Dot & Name */}
+                            <div className="flex items-center gap-2.5 min-w-[130px]">
+                              <span
+                                className="w-5 h-5 rounded-full border border-neutral-300 shadow-xs shrink-0"
+                                style={{ backgroundColor: color.hex }}
+                              />
+                              <div>
+                                <span className="font-bold text-neutral-900 text-xs block leading-tight">
+                                  {color.name}
+                                </span>
+                                <span className="text-[10px] font-mono text-neutral-400">
+                                  {color.hex}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* In Stock / Unavailable Toggle Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleColorStock(color.name)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-2xs ${
+                                isInStock
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                                  : 'bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200'
+                              }`}
+                              title="ক্লিক করে স্ট্যাটাস পরিবর্তন করুন"
+                            >
+                              <span className={`w-2 h-2 rounded-full ${isInStock ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                              <span>{isInStock ? 'স্টকে আছে' : 'স্টক শেষ (Unavailable)'}</span>
+                            </button>
+
+                            {/* Color Stock Quantity */}
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[11px] font-semibold text-neutral-600">কয়টা আছে:</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={qty}
+                                onChange={(e) =>
+                                  handleUpdateColorQuantity(color.name, parseInt(e.target.value) || 0)
+                                }
+                                className="w-16 px-2 py-1 text-center font-bold text-xs rounded-lg border border-neutral-300 focus:border-black outline-none bg-white text-neutral-900"
+                              />
+                              <span className="text-[11px] text-neutral-500">টি</span>
+                            </div>
+
+                            {/* Remove Color */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveColor(color.name)}
+                              className="p-1.5 text-neutral-400 hover:text-rose-600 rounded-lg hover:bg-neutral-100 transition-colors shrink-0"
+                              title="কালারটি সরান"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                          <span className="text-xs sm:text-sm font-bold text-neutral-800 group-hover:text-amber-950">
-                            মোবাইল গ্যালারি বা ল্যাপটপের স্টোরেজ থেকে ছবি সিলেক্ট করুন
-                          </span>
-                          <span className="text-[10px] text-neutral-500 mt-1">
-                            JPG, PNG, WebP ফরম্যাট (ট্যাপ বা ফাইল চুজ করুন)
-                          </span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={isUploadingImage}
-                        onChange={handleImageFileUpload}
-                        className="hidden"
-                      />
-                    </label>
+                        );
+                      })}
+                    </div>
                   )}
+                </div>
+
+                {/* Preset Fashion Color Swatches Palette */}
+                <div className="space-y-1.5 pt-2 border-t border-neutral-200/70">
+                  <span className="text-[11px] font-semibold text-neutral-700 block">
+                    জনপ্রিয় কালার প্যালেট (১-ক্লিকে যোগ বা রিমুভ করুন):
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POPULAR_COLORS.map((col) => {
+                      const isSelected = productForm.colorSwatches.some(
+                        (c) => c.name.toLowerCase() === col.name.toLowerCase()
+                      );
+                      return (
+                        <button
+                          key={col.name}
+                          type="button"
+                          onClick={() => handleToggleColorPreset(col)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-all ${
+                            isSelected
+                              ? 'bg-neutral-900 text-white font-bold ring-1 ring-neutral-900 shadow-2xs'
+                              : 'bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200'
+                          }`}
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full border border-neutral-300 shadow-2xs"
+                            style={{ backgroundColor: col.hex }}
+                          />
+                          <span>{col.name}</span>
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Color Creator */}
+                <div className="pt-2 border-t border-neutral-200/70 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-semibold text-neutral-700">কাস্টম কালার:</span>
+                  <input
+                    type="color"
+                    value={customColorHex}
+                    onChange={(e) => setCustomColorHex(e.target.value)}
+                    className="w-7 h-7 rounded border border-neutral-300 cursor-pointer p-0.5 bg-white"
+                    title="কালার কোড বাছুন"
+                  />
+                  <input
+                    type="text"
+                    placeholder="কালারের নাম (যেমন: Royal Blue)"
+                    value={customColorName}
+                    onChange={(e) => setCustomColorName(e.target.value)}
+                    className="px-2.5 py-1 text-xs rounded-lg border border-neutral-300 focus:border-black outline-none bg-white text-neutral-900 w-44"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomColor}
+                    className="px-3 py-1 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+                  >
+                    + কালার যুক্ত করুন
+                  </button>
+                </div>
+              </div>
+
+              {/* Size Variants Section (সাইজ অপশন) */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block font-semibold text-neutral-700 text-xs">
+                    সাইজ অপশন (Sizes)
+                  </label>
+                  <span className="text-[10px] text-neutral-500 font-mono">
+                    {productForm.sizes.join(', ') || 'None'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {STANDARD_SIZES.map((sz) => {
+                    const isSelected = productForm.sizes.includes(sz);
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => handleToggleSize(sz)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          isSelected
+                            ? 'bg-neutral-900 text-white shadow-2xs'
+                            : 'bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-300'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

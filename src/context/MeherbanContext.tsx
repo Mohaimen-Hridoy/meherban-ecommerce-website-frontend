@@ -12,6 +12,7 @@ import {
   PromoBanner,
   InstagramPost,
   MeherbanCategory,
+  ColorSwatch,
 } from '@/types/meherban';
 import {
   MEHERBAN_PRODUCTS,
@@ -37,7 +38,7 @@ interface NewProductInput {
   originalPrice?: number;
   categoryName: string;
   images: string[];
-  colorSwatches: { name: string; hex: string }[];
+  colorSwatches: ColorSwatch[];
   sizes: string[];
   inStock: boolean;
   stockQuantity: number;
