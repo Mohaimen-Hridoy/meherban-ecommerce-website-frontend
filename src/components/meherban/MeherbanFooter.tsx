@@ -71,12 +71,29 @@ export const MeherbanFooter: React.FC = () => {
 
           <div className="space-y-3">
             <h4 className="text-white text-xs font-semibold uppercase tracking-widest font-mono">
-              Support
+              Support & Contact
             </h4>
             <ul className="space-y-2">
+              <li>
+                <a
+                  href="tel:01778607894"
+                  className="hover:text-white transition-colors block text-neutral-300 font-medium text-xs"
+                >
+                  📞 Helpline: 01778607894
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://wa.me/8801778607894"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-emerald-400 transition-colors block text-emerald-500 font-medium text-xs"
+                >
+                  💬 WhatsApp: 01778607894
+                </a>
+              </li>
               {[
                 'About Us',
-                'Contact Us',
                 'Shipping Policy',
                 'Return Policy',
                 'Size Guide',
@@ -87,7 +104,7 @@ export const MeherbanFooter: React.FC = () => {
                     href="#support"
                     onClick={(e) => {
                       e.preventDefault();
-                      alert(`${item} — MEHERBAN Care Concierge: support@meherban.com`);
+                      alert(`${item} — MEHERBAN Care Concierge: 01778607894`);
                     }}
                     className="hover:text-white transition-colors block text-neutral-400 text-xs"
                   >
@@ -129,40 +146,34 @@ export const MeherbanFooter: React.FC = () => {
 
             <div className="flex items-center gap-3 pt-3 text-neutral-400">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/meherban___?dlrf=Z2ZmNHpsZnhoOWRo"
                 target="_blank"
                 rel="noreferrer"
                 className="w-8 h-8 rounded-full bg-neutral-900 hover:bg-neutral-800 hover:text-white flex items-center justify-center transition-colors"
-                aria-label="Instagram"
+                aria-label="Instagram (@meherban___)"
+                title="Instagram: @meherban___"
               >
                 <InstagramIcon className="w-4 h-4" />
               </a>
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/MeherbanBrand"
                 target="_blank"
                 rel="noreferrer"
                 className="w-8 h-8 rounded-full bg-neutral-900 hover:bg-neutral-800 hover:text-white flex items-center justify-center transition-colors"
-                aria-label="Facebook"
+                aria-label="Facebook (MeherbanBrand)"
+                title="Facebook: MeherbanBrand"
               >
                 <FacebookIcon className="w-4 h-4" />
               </a>
               <a
-                href="https://tiktok.com"
+                href="https://www.tiktok.com/@meherban__"
                 target="_blank"
                 rel="noreferrer"
                 className="w-8 h-8 rounded-full bg-neutral-900 hover:bg-neutral-800 hover:text-white flex items-center justify-center transition-colors"
-                aria-label="TikTok"
+                aria-label="TikTok (@meherban__)"
+                title="TikTok: @meherban__"
               >
                 <TikTokIcon className="w-4 h-4" />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-full bg-neutral-900 hover:bg-neutral-800 hover:text-white flex items-center justify-center transition-colors"
-                aria-label="YouTube"
-              >
-                <YoutubeIcon className="w-4 h-4" />
               </a>
             </div>
           </div>

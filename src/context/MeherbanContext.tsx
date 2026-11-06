@@ -55,7 +55,7 @@ const DEFAULT_SELLERS: MeherbanSeller[] = [
     id: 'seller-1',
     name: 'Mohaimen Hridoy (Merchant)',
     email: 'seller@meherban.com',
-    phone: '01712-345678',
+    phone: '01778607894',
     shopName: 'MEHERBAN Official Store',
     isActive: true,
     joinedAt: '2026-01-15T10:00:00Z',

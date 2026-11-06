@@ -31,13 +31,13 @@ export const MeherbanInstagram: React.FC = () => {
           </div>
 
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/meherban___?dlrf=Z2ZmNHpsZnhoOWRo"
             target="_blank"
             rel="noopener noreferrer"
             className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium uppercase tracking-wider text-neutral-600 hover:text-black transition-colors"
           >
             <InstagramIcon className="w-4 h-4 text-neutral-600 group-hover:text-black" />
-            <span className="hidden sm:inline">@MEHERBAN_OFFICIAL</span>
+            <span className="hidden sm:inline">@meherban___</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
           </a>
         </div>
@@ -51,7 +51,7 @@ export const MeherbanInstagram: React.FC = () => {
           {posts.map((item) => (
             <a
               key={item.id}
-              href="https://instagram.com"
+              href="https://www.instagram.com/meherban___?dlrf=Z2ZmNHpsZnhoOWRo"
               target="_blank"
               rel="noopener noreferrer"
               className="group relative flex-none w-[115px] sm:w-[140px] md:w-[155px] aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-neutral-200 cursor-pointer shadow-xs"

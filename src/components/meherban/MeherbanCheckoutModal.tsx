@@ -116,7 +116,7 @@ export const MeherbanCheckoutModal: React.FC = () => {
     if (!orderSuccess) return;
     const msg = `হ্যালো MEHERBAN! আমি ফেসবুক/ইনস্টাগ্রাম থেকে অর্ডার করেছি।\nঅর্ডার নম্বর: ${orderSuccess.orderNumber}\nমোট মূল্য: ৳${orderSuccess.totalAmount}\nনাম: ${orderSuccess.name}\nফোন: ${orderSuccess.phone}\nঠিকানা: ${orderSuccess.address}, ${orderSuccess.city}\nদয়া করে অর্ডারটি দ্রুত কনফার্ম ও ডেলিভারি দিন। ধন্যবাদ!`;
     const encoded = encodeURIComponent(msg);
-    window.open(`https://wa.me/8801700000000?text=${encoded}`, '_blank');
+    window.open(`https://wa.me/8801778607894?text=${encoded}`, '_blank');
   };
 
   return (

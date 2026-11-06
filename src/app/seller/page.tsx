@@ -2273,8 +2273,15 @@ export default function SellerPage() {
             <div className="border-t pt-2 space-y-1">
               <span className="font-bold text-[10px] uppercase text-neutral-500">পণ্য তালিকা:</span>
               {invoiceOrder.items.map((it, idx) => (
-                <div key={idx} className="flex justify-between text-neutral-800">
-                  <span>{it.title} (x{it.quantity})</span>
+                <div key={idx} className="flex justify-between items-start text-neutral-800">
+                  <div>
+                    <span className="font-semibold">{it.title} (x{it.quantity})</span>
+                    {(it.selectedColor || it.selectedSize) && (
+                      <span className="block text-[10px] text-neutral-500 font-mono">
+                        কালার: {it.selectedColor || 'Standard'} | সাইজ: {it.selectedSize || 'Standard'}
+                      </span>
+                    )}
+                  </div>
                   <span className="font-bold font-mono">৳{(it.price * it.quantity).toLocaleString()}</span>
                 </div>
               ))}

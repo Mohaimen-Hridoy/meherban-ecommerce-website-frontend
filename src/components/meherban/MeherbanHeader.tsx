@@ -225,10 +225,13 @@ export const MeherbanHeader: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-neutral-600 pt-2">
-                  <Phone className="w-4 h-4 text-neutral-400" />
-                  <span>Support: +880 1700-000000</span>
-                </div>
+                <a
+                  href="tel:01778607894"
+                  className="flex items-center gap-2.5 text-xs text-neutral-700 hover:text-black pt-2 font-medium transition-colors"
+                >
+                  <Phone className="w-4 h-4 text-neutral-500" />
+                  <span>Helpline: 01778607894</span>
+                </a>
               </div>
             </div>
 
