@@ -164,7 +164,30 @@ interface MeherbanContextType {
 const MeherbanContext = createContext<MeherbanContextType | undefined>(undefined);
 
 export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<MeherbanProduct[]>(MEHERBAN_PRODUCTS);
+  // Synchronous Lazy Initializer: loads custom and catalog products instantly on frame 1
+  const [products, setProducts] = useState<MeherbanProduct[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedCustom = localStorage.getItem('meherban_custom_products');
+        const customItems: MeherbanProduct[] = savedCustom ? JSON.parse(savedCustom) : [];
+
+        const savedCatalog = localStorage.getItem('meherban_products');
+        const catalogItems: MeherbanProduct[] = savedCatalog ? JSON.parse(savedCatalog) : [];
+
+        const customIds = new Set(customItems.map((p) => p.id));
+        const catalogWithoutCustom = catalogItems.filter((p) => !customIds.has(p.id));
+        const combined = [...customItems, ...catalogWithoutCustom];
+
+        const combinedIds = new Set(combined.map((p) => p.id));
+        const missingDefaults = MEHERBAN_PRODUCTS.filter((p) => !combinedIds.has(p.id));
+        const fullList = [...combined, ...missingDefaults];
+
+        if (fullList.length > 0) return fullList;
+      } catch {}
+    }
+    return MEHERBAN_PRODUCTS;
+  });
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [orders, setOrders] = useState<MeherbanOrder[]>([]);
@@ -187,9 +210,6 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [promoBanners, setPromoBanners] = useState<PromoBanner[]>(DEFAULT_PROMO_BANNERS);
   const [categories, setCategories] = useState<MeherbanCategory[]>(MEHERBAN_CATEGORIES);
   const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>(INSTAGRAM_POSTS);
-
-  // Persistence guard: prevents initial default state from wiping localStorage on mount
-  const isStorageLoaded = useRef(false);
 
   const getBackendUrl = () => {
     let url = process.env.NEXT_PUBLIC_API_URL || '';
@@ -249,10 +269,13 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const catalogWithoutCustom = catalogProducts.filter((p) => !customIds.has(p.id));
       const mergedProducts = [...customProducts, ...catalogWithoutCustom];
 
-      setProducts(mergedProducts);
-      isStorageLoaded.current = true;
+      const mergedIds = new Set(mergedProducts.map((p) => p.id));
+      const missingDefaults = MEHERBAN_PRODUCTS.filter((p) => !mergedIds.has(p.id));
+      const fullList = [...mergedProducts, ...missingDefaults];
+
+      setProducts(fullList);
       try {
-        localStorage.setItem('meherban_products', JSON.stringify(mergedProducts));
+        localStorage.setItem('meherban_products', JSON.stringify(fullList));
       } catch {}
 
       const savedCart = localStorage.getItem('meherban_cart');
@@ -324,7 +347,9 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               const localUnique = prev.filter((p) => customIds.has(p.id) || !dbIds.has(p.id));
               const combinedMap = new Map<string, MeherbanProduct>();
               persistentCustom.forEach((p) => combinedMap.set(p.id, p));
-              localUnique.forEach((p) => combinedMap.set(p.id, p));
+              localUnique.forEach((p) => {
+                if (!combinedMap.has(p.id)) combinedMap.set(p.id, p);
+              });
               dbProducts.forEach((p) => {
                 if (!combinedMap.has(p.id)) combinedMap.set(p.id, p);
               });
@@ -351,7 +376,7 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetchApiData();
   }, []);
 
-  // Sync to LocalStorage (Guarded: NEVER overwrite on mount!)
+  // Sync auxiliary states to LocalStorage
   useEffect(() => {
     try {
       localStorage.setItem('meherban_cart', JSON.stringify(cart));
@@ -363,13 +388,6 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem('meherban_wishlist', JSON.stringify(wishlist));
     } catch {}
   }, [wishlist]);
-
-  useEffect(() => {
-    if (!isStorageLoaded.current) return;
-    try {
-      localStorage.setItem('meherban_products', JSON.stringify(products));
-    } catch {}
-  }, [products]);
 
   useEffect(() => {
     try {
@@ -634,9 +652,25 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!prod) return;
 
     const newInStock = !prod.inStock;
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, inStock: newInStock } : p))
-    );
+    setProducts((prev) => {
+      const updated = prev.map((p) => (p.id === id ? { ...p, inStock: newInStock } : p));
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Also persist to custom products
+    try {
+      const existingCustom: MeherbanProduct[] = JSON.parse(
+        localStorage.getItem('meherban_custom_products') || '[]'
+      );
+      const cIdx = existingCustom.findIndex((p) => p.id === id);
+      if (cIdx !== -1) {
+        existingCustom[cIdx] = { ...existingCustom[cIdx], inStock: newInStock };
+        localStorage.setItem('meherban_custom_products', JSON.stringify(existingCustom));
+      }
+    } catch {}
 
     if (newInStock) {
       addToast(`"${prod.title}" এখন Available / স্টকে আছে`, 'success');
@@ -658,8 +692,8 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const safeQty = Math.max(0, qty);
     const newInStock = safeQty > 0;
 
-    setProducts((prev) =>
-      prev.map((p) =>
+    setProducts((prev) => {
+      const updated = prev.map((p) =>
         p.id === id
           ? {
               ...p,
@@ -667,8 +701,28 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               inStock: safeQty === 0 ? false : p.inStock,
             }
           : p
-      )
-    );
+      );
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Also persist to custom products
+    try {
+      const existingCustom: MeherbanProduct[] = JSON.parse(
+        localStorage.getItem('meherban_custom_products') || '[]'
+      );
+      const cIdx = existingCustom.findIndex((p) => p.id === id);
+      if (cIdx !== -1) {
+        existingCustom[cIdx] = {
+          ...existingCustom[cIdx],
+          stockQuantity: safeQty,
+          inStock: safeQty === 0 ? false : existingCustom[cIdx].inStock,
+        };
+        localStorage.setItem('meherban_custom_products', JSON.stringify(existingCustom));
+      }
+    } catch {}
 
     try {
       const url = getBackendUrl();
@@ -854,8 +908,8 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const orderSellerId = firstOrderedProduct?.sellerId || 'seller-1';
 
     // Decrement stock for ordered items
-    setProducts((prev) =>
-      prev.map((prod) => {
+    setProducts((prev) => {
+      const updated = prev.map((prod) => {
         const ordered = itemsToOrder.find((i) => i.productId === prod.id);
         if (ordered && prod.stockQuantity) {
           const newStock = Math.max(0, prod.stockQuantity - ordered.quantity);
@@ -866,8 +920,36 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           };
         }
         return prod;
-      })
-    );
+      });
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Also persist decremented stock in custom products
+    try {
+      const existingCustom: MeherbanProduct[] = JSON.parse(
+        localStorage.getItem('meherban_custom_products') || '[]'
+      );
+      let changed = false;
+      const updatedCustom = existingCustom.map((prod) => {
+        const ordered = itemsToOrder.find((i) => i.productId === prod.id);
+        if (ordered && prod.stockQuantity) {
+          changed = true;
+          const newStock = Math.max(0, prod.stockQuantity - ordered.quantity);
+          return {
+            ...prod,
+            stockQuantity: newStock,
+            inStock: newStock > 0,
+          };
+        }
+        return prod;
+      });
+      if (changed) {
+        localStorage.setItem('meherban_custom_products', JSON.stringify(updatedCustom));
+      }
+    } catch {}
 
     const newOrder: MeherbanOrder = {
       id: `ord-${Date.now()}`,

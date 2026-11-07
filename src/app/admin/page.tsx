@@ -471,7 +471,10 @@ export default function AdminPage() {
       return;
     }
 
-    const selectedSeller = sellers.find((s) => s.id === productForm.sellerId) || sellers[0];
+    const selectedSeller = sellers.find((s) => s.id === productForm.sellerId) || sellers[0] || {
+      id: 'seller-1',
+      shopName: 'Meherban Apparel Store',
+    };
     const cleanedImages = productForm.images.filter((img) => img.trim().length > 0);
     const finalImages = cleanedImages.length > 0 ? cleanedImages : [
       'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',

@@ -606,13 +606,13 @@ export default function SellerPage() {
     addToast('কুরিয়ারের জন্য তথ্য কপি করা হয়েছে (Steadfast/Pathao)!', 'success');
   };
 
-  // Filter products for this seller (or all if demo)
+  // Filter products for this seller (single-seller store support)
   const sellerProducts = products.filter(
-    (p) => !p.sellerId || p.sellerId === currentSeller?.id || currentSeller?.id === 'seller-1'
+    (p) => !p.sellerId || !currentSeller || p.sellerId === currentSeller.id || currentSeller.id === 'seller-1' || p.sellerId === 'seller-1'
   );
 
   const sellerOrders = orders.filter(
-    (o) => !o.sellerId || o.sellerId === currentSeller?.id || currentSeller?.id === 'seller-1'
+    (o) => !o.sellerId || !currentSeller || o.sellerId === currentSeller.id || currentSeller.id === 'seller-1' || o.sellerId === 'seller-1'
   );
 
   // Metrics for Seller
