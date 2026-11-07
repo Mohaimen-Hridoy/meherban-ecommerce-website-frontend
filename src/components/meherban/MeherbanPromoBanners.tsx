@@ -6,6 +6,17 @@ import { useMeherban } from '@/context/MeherbanContext';
 export const MeherbanPromoBanners: React.FC = () => {
   const { setActiveCategory, promoBanners } = useMeherban();
 
+  const handlePromoClick = (categoryName: string) => {
+    const std = ['Men', 'Women', 'Unisex', 'Accessories'].find(
+      (c) => c.toLowerCase() === categoryName.trim().toLowerCase()
+    );
+    setActiveCategory(std || categoryName);
+    const el = document.getElementById('trending');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const promos = [
     {
       id: 'men-promo',
@@ -46,7 +57,7 @@ export const MeherbanPromoBanners: React.FC = () => {
           {(promoBanners && promoBanners.length > 0 ? promoBanners : promos).map((item) => (
             <div
               key={item.id}
-              onClick={() => setActiveCategory(item.category)}
+              onClick={() => handlePromoClick(item.category)}
               className={`relative overflow-hidden rounded-xl sm:rounded-2xl cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 ${item.bgClass} flex items-center min-h-[160px] sm:min-h-[180px] group`}
             >
               {/* Image Container */}

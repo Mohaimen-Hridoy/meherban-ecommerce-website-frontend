@@ -32,16 +32,21 @@ export const MeherbanHeader: React.FC = () => {
 
   const navLinks = [
     { label: 'Home', href: '#hero', category: 'Home' },
-    { label: 'Men', href: '#collections', category: 'Men' },
-    { label: 'Women', href: '#collections', category: 'Women' },
-    { label: 'Unisex', href: '#collections', category: 'Unisex' },
+    { label: 'Men', href: '#trending', category: 'Men' },
+    { label: 'Women', href: '#trending', category: 'Women' },
+    { label: 'Unisex', href: '#trending', category: 'Unisex' },
     { label: 'Clothing', href: '#trending', category: 'Clothing' },
-    { label: 'Accessories', href: '#collections', category: 'Accessories' },
+    { label: 'Accessories', href: '#trending', category: 'Accessories' },
   ];
 
   const handleNavClick = (category: string) => {
     setActiveCategory(category);
     setIsMobileMenuOpen(false);
+    const targetId = category === 'Home' ? 'hero' : 'trending';
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -81,12 +86,15 @@ export const MeherbanHeader: React.FC = () => {
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-7">
               {navLinks.map((link) => {
-                const isActive = activeCategory === link.category;
+                const isActive = (activeCategory || '').toLowerCase() === link.category.toLowerCase();
                 return (
                   <a
                     key={link.label}
                     href={link.href}
-                    onClick={() => handleNavClick(link.category)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavClick(link.category);
+                    }}
                     className={`relative text-[13.5px] font-medium tracking-wide transition-colors py-1 ${
                       isActive
                         ? 'text-neutral-950 font-semibold'
@@ -197,21 +205,27 @@ export const MeherbanHeader: React.FC = () => {
               <p className="text-[10px] uppercase tracking-widest text-neutral-400 font-semibold mb-3">
                 Collections & Categories
               </p>
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => handleNavClick(link.category)}
-                  className={`flex items-center justify-between py-3 px-3 rounded-lg text-sm transition-colors ${
-                    activeCategory === link.category
-                      ? 'bg-neutral-900 text-white font-medium'
-                      : 'text-neutral-800 hover:bg-neutral-100'
-                  }`}
-                >
-                  <span>{link.label}</span>
-                  <ChevronRight className="w-4 h-4 opacity-60" />
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = (activeCategory || '').toLowerCase() === link.category.toLowerCase();
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavClick(link.category);
+                    }}
+                    className={`flex items-center justify-between py-3 px-3 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? 'bg-neutral-900 text-white font-medium'
+                        : 'text-neutral-800 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <span>{link.label}</span>
+                    <ChevronRight className="w-4 h-4 opacity-60" />
+                  </a>
+                );
+              })}
 
               <div className="pt-6 mt-6 border-t border-neutral-100 space-y-2.5">
                 <div className="bg-[#FAF7F2] p-4 rounded-xl border border-neutral-200/60">

@@ -10,7 +10,10 @@ export const MeherbanCollections: React.FC = () => {
   const displayCategories = categories && categories.length > 0 ? categories : MEHERBAN_CATEGORIES;
 
   const handleCategoryClick = (categoryName: string) => {
-    setActiveCategory(categoryName);
+    const std = ['Men', 'Women', 'Unisex', 'Accessories'].find(
+      (c) => c.toLowerCase() === categoryName.trim().toLowerCase()
+    );
+    setActiveCategory(std || categoryName);
     const el = document.getElementById('trending');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });

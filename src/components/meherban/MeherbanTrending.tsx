@@ -33,27 +33,42 @@ export const MeherbanTrending: React.FC = () => {
   const [selectedColors, setSelectedColors] = useState<{ [productId: string]: string }>({});
   const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('grid');
 
-  // Dynamic Category Extraction: merge predefined categories + categories from products
+  // Dynamic Category Extraction: merge predefined categories + categories from products (case-insensitive deduplication)
   const categoryList = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, string>();
+    map.set('all', 'All');
+
+    // Standard fashion categories first in clean order
+    ['Men', 'Women', 'Unisex', 'Accessories', 'Clothing'].forEach((c) => {
+      map.set(c.toLowerCase(), c);
+    });
+
     categories.forEach((c) => {
       if (c.name && c.name !== 'Home' && c.name.toLowerCase() !== 'all') {
-        set.add(c.name);
+        const lower = c.name.trim().toLowerCase();
+        if (!map.has(lower)) {
+          map.set(lower, c.name.trim());
+        }
       }
     });
+
     products.forEach((p) => {
       if (p.categoryName && p.categoryName !== 'Home' && p.categoryName.toLowerCase() !== 'all') {
-        set.add(p.categoryName);
+        const lower = p.categoryName.trim().toLowerCase();
+        if (!map.has(lower)) {
+          map.set(lower, p.categoryName.trim());
+        }
       }
     });
-    return ['All', ...Array.from(set)];
+
+    return Array.from(map.values());
   }, [categories, products]);
 
   // Product count for each category
   const getCategoryCount = (catName: string) => {
-    if (catName === 'All' || catName === 'Home') return products.length;
+    if (!catName || catName === 'All' || catName === 'Home') return products.length;
     return products.filter(
-      (p) => p.categoryName && p.categoryName.toLowerCase() === catName.toLowerCase()
+      (p) => p.categoryName && p.categoryName.trim().toLowerCase() === catName.trim().toLowerCase()
     ).length;
   };
 
@@ -105,7 +120,7 @@ export const MeherbanTrending: React.FC = () => {
       return products;
     }
     return products.filter(
-      (p) => p.categoryName && p.categoryName.toLowerCase() === activeCategory.toLowerCase()
+      (p) => p.categoryName && p.categoryName.trim().toLowerCase() === activeCategory.trim().toLowerCase()
     );
   }, [products, activeCategory]);
 
@@ -197,8 +212,8 @@ export const MeherbanTrending: React.FC = () => {
           <div className="flex items-center gap-2 min-w-max">
             {categoryList.map((catName) => {
               const isCatActive =
-                (catName === 'All' && (!activeCategory || activeCategory === 'Home' || activeCategory === 'All')) ||
-                activeCategory.toLowerCase() === catName.toLowerCase();
+                (catName === 'All' && (!activeCategory || activeCategory === 'Home' || activeCategory.toLowerCase() === 'all')) ||
+                (activeCategory && activeCategory.trim().toLowerCase() === catName.trim().toLowerCase());
               const count = getCategoryCount(catName);
 
               return (

@@ -416,8 +416,14 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const effectiveSellerId = input.sellerId || (currentSeller ? currentSeller.id : 'seller-1');
     const effectiveSellerName = input.sellerName || (currentSeller ? currentSeller.shopName : 'Meherban Apparel Store');
 
+    const cleanCat = (input.categoryName || 'Women').trim();
+    const standardMatch = ['Men', 'Women', 'Unisex', 'Accessories', 'Clothing'].find(
+      (c) => c.toLowerCase() === cleanCat.toLowerCase()
+    );
+    const categoryName = standardMatch || cleanCat;
+
     const newProd: MeherbanProduct = {
-      id: `prod-${Date.now()}`,
+      id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       title: input.title,
       slug,
       subtitle: input.subtitle || '',
@@ -426,9 +432,9 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       originalPrice: input.originalPrice ? Number(input.originalPrice) : Number(input.price),
       rating: 5.0,
       reviewCount: 1,
-      categoryName: input.categoryName,
+      categoryName,
       images: input.images.length > 0 ? input.images : ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'],
-      colorSwatches: input.colorSwatches.length > 0 ? input.colorSwatches : [{ name: 'Standard', hex: '#111111' }],
+      colorSwatches: input.colorSwatches.length > 0 ? input.colorSwatches : [{ name: 'Black', hex: '#000000', inStock: true, stockQuantity: 20 }],
       sizes: input.sizes.length > 0 ? input.sizes : ['Standard'],
       inStock: input.inStock,
       stockQuantity: Number(input.stockQuantity) || 25,
@@ -439,7 +445,14 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       sellerName: effectiveSellerName,
     };
 
-    setProducts((prev) => [newProd, ...prev]);
+    setProducts((prev) => {
+      const updated = [newProd, ...prev.filter((p) => p.id !== newProd.id)];
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
     addToast(`"${newProd.title}" সফলভাবে যোগ হয়েছে!`, 'success');
 
     try {
@@ -457,12 +470,22 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateProduct = async (id: string, updatedData: Partial<MeherbanProduct>): Promise<MeherbanProduct | null> => {
     let updatedProduct: MeherbanProduct | null = null;
 
-    setProducts((prev) =>
-      prev.map((item) => {
+    setProducts((prev) => {
+      const updated = prev.map((item) => {
         if (item.id === id) {
+          let cat = item.categoryName;
+          if (updatedData.categoryName) {
+            const cleanCat = updatedData.categoryName.trim();
+            const standardMatch = ['Men', 'Women', 'Unisex', 'Accessories', 'Clothing'].find(
+              (c) => c.toLowerCase() === cleanCat.toLowerCase()
+            );
+            cat = standardMatch || cleanCat;
+          }
+
           const merged: MeherbanProduct = {
             ...item,
             ...updatedData,
+            categoryName: cat,
             price: updatedData.price !== undefined ? Number(updatedData.price) : item.price,
             originalPrice: updatedData.originalPrice !== undefined ? Number(updatedData.originalPrice) : item.originalPrice,
             stockQuantity: updatedData.stockQuantity !== undefined ? Number(updatedData.stockQuantity) : item.stockQuantity,
@@ -474,8 +497,14 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return merged;
         }
         return item;
-      })
-    );
+      });
+
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(updated));
+      } catch {}
+
+      return updated;
+    });
 
     if (updatedProduct) {
       addToast(`"${(updatedProduct as MeherbanProduct).title}" আপডেট সম্পন্ন!`, 'success');
@@ -495,7 +524,13 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteProduct = async (id: string): Promise<boolean> => {
     const prod = products.find((p) => p.id === id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== id);
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
     addToast(prod ? `"${prod.title}" ডিলিট করা হয়েছে!` : 'প্রোডাক্ট ডিলিট করা হয়েছে!', 'info');
 
     try {

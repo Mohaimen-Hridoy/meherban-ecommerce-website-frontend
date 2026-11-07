@@ -141,18 +141,28 @@ export default function SellerPage() {
   // Standard Fashion Sizes
   const STANDARD_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
 
-  // All Available Dynamic & Standard Categories
+  // All Available Dynamic & Standard Categories (Case-insensitive deduplication)
   const availableCategories = Array.from(
-    new Set([
-      'Men',
-      'Women',
-      'Unisex',
-      'Accessories',
-      'Clothing',
-      ...(categories || []).map((c) => c.name),
-      ...products.map((p) => p.categoryName),
-    ])
-  ).filter(Boolean);
+    new Map(
+      [
+        'Men',
+        'Women',
+        'Unisex',
+        'Accessories',
+        'Clothing',
+        ...(categories || []).map((c) => c.name),
+        ...products.map((p) => p.categoryName),
+      ]
+        .filter(Boolean)
+        .map((cat) => {
+          const lower = cat.trim().toLowerCase();
+          const std = ['Men', 'Women', 'Unisex', 'Accessories', 'Clothing'].find(
+            (s) => s.toLowerCase() === lower
+          );
+          return [lower, std || cat.trim()];
+        })
+    ).values()
+  );
 
   // Toggle Preset Color Swatch
   const handleToggleColorPreset = (color: { name: string; hex: string }) => {
@@ -526,6 +536,12 @@ export default function SellerPage() {
       'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
     ];
 
+    const cleanCat = (productForm.categoryName || 'Women').trim();
+    const stdMatch = ['Men', 'Women', 'Unisex', 'Accessories', 'Clothing'].find(
+      (s) => s.toLowerCase() === cleanCat.toLowerCase()
+    );
+    const finalCategoryName = stdMatch || cleanCat;
+
     if (editingProductId) {
       await updateProduct(editingProductId, {
         title: productForm.title,
@@ -533,7 +549,7 @@ export default function SellerPage() {
         description: productForm.description,
         price: Number(productForm.price),
         originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : Number(productForm.price),
-        categoryName: productForm.categoryName,
+        categoryName: finalCategoryName,
         images: finalImages,
         colorSwatches: productForm.colorSwatches,
         sizes: productForm.sizes,
@@ -550,7 +566,7 @@ export default function SellerPage() {
         description: productForm.description,
         price: Number(productForm.price),
         originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : Number(productForm.price),
-        categoryName: productForm.categoryName,
+        categoryName: finalCategoryName,
         images: finalImages,
         colorSwatches: productForm.colorSwatches,
         sizes: productForm.sizes,
