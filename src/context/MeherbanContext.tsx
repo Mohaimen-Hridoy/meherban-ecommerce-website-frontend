@@ -21,6 +21,11 @@ import {
   MEHERBAN_CATEGORIES,
   INSTAGRAM_POSTS,
 } from '@/lib/meherbanData';
+import {
+  idbSaveProduct,
+  idbGetAllCustomProducts,
+  idbDeleteProduct,
+} from '@/lib/meherbanStorage';
 
 export type DeviceViewMode = 'responsive' | 'desktop' | 'mobile' | 'split';
 
@@ -148,6 +153,9 @@ interface MeherbanContextType {
   toasts: ToastMessage[];
   addToast: (text: string, type?: 'success' | 'info' | 'error') => void;
   removeToast: (id: string) => void;
+
+  // Backend & Utilities
+  getBackendUrl: () => string;
 
   // Frontpage Media Controls (Hero Sliders, Collections, Promo Banners, Instagram)
   heroSlides: HeroSlide[];
@@ -318,6 +326,26 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } catch {}
       }
     } catch {}
+
+    // 4. Asynchronously load persistent products from IndexedDB (immune to 5MB localStorage quota)
+    idbGetAllCustomProducts()
+      .then((idbProducts) => {
+        if (idbProducts && idbProducts.length > 0) {
+          setProducts((prev) => {
+            const combinedMap = new Map<string, MeherbanProduct>();
+            idbProducts.forEach((p) => combinedMap.set(p.id, p));
+            prev.forEach((p) => {
+              if (!combinedMap.has(p.id)) combinedMap.set(p.id, p);
+            });
+            const merged = Array.from(combinedMap.values());
+            try {
+              localStorage.setItem('meherban_products', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
 
     // Sync products and orders with backend API (Neon PostgreSQL)
     const fetchApiData = async () => {
@@ -517,7 +545,12 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       sellerName: effectiveSellerName,
     };
 
-    // 1. Permanently store in meherban_custom_products (never wiped)
+    // 1. Permanently store in IndexedDB (immune to 5MB browser quota limits)
+    try {
+      await idbSaveProduct(newProd);
+    } catch {}
+
+    // 2. Permanently store in meherban_custom_products (localStorage cache)
     try {
       const existingCustom: MeherbanProduct[] = JSON.parse(
         localStorage.getItem('meherban_custom_products') || '[]'
@@ -588,8 +621,11 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return updated;
     });
 
-    // Also update custom products if present
+    // Also update custom products in IndexedDB & localStorage
     try {
+      if (updatedProduct) {
+        await idbSaveProduct(updatedProduct);
+      }
       const existingCustom: MeherbanProduct[] = JSON.parse(
         localStorage.getItem('meherban_custom_products') || '[]'
       );
@@ -619,8 +655,9 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deleteProduct = async (id: string): Promise<boolean> => {
     const prod = products.find((p) => p.id === id);
 
-    // Remove from custom products
+    // Remove from IndexedDB & custom products
     try {
+      await idbDeleteProduct(id);
       const existingCustom: MeherbanProduct[] = JSON.parse(
         localStorage.getItem('meherban_custom_products') || '[]'
       );
@@ -1158,6 +1195,9 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         toasts,
         addToast,
         removeToast,
+
+        // Backend URL Helper
+        getBackendUrl,
 
         // Frontpage Media Controls
         heroSlides,

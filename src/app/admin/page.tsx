@@ -46,6 +46,7 @@ export default function AdminPage() {
     deleteProduct,
     toggleProductAvailability,
     updateProductStockQuantity,
+    getBackendUrl,
     orders,
     updateOrderStatus,
     sellers,
@@ -288,7 +289,7 @@ export default function AdminPage() {
   };
 
   // Client-Side Canvas Image Compression to prevent payload limits and optimize loading
-  const compressImageFile = (file: File, maxWidth = 1200, quality = 0.82): Promise<string> => {
+  const compressImageFile = (file: File, maxWidth = 800, quality = 0.65): Promise<string> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -334,14 +335,16 @@ export default function AdminPage() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      const res = await fetch(`${apiUrl}/meherban/upload`, {
+      const backendUrl = getBackendUrl();
+      const res = await fetch(`${backendUrl}/api/v1/meherban/upload`, {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
-      if (data.success && data.data?.url) {
-        return data.data.url;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data?.url) {
+          return data.data.url;
+        }
       }
     } catch {}
 
