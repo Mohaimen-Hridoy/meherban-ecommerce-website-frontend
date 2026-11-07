@@ -189,7 +189,10 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>(INSTAGRAM_POSTS);
 
   const getBackendUrl = () => {
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    let url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    url = url.replace(/\/api\/v1\/?$/, '');
+    url = url.replace(/\/$/, '');
+    return url;
   };
 
   const addToast = useCallback((text: string, type: 'success' | 'info' | 'error' = 'info') => {
@@ -270,8 +273,15 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (prodRes.status === 'fulfilled' && prodRes.value.ok) {
           const data = await prodRes.value.json();
           if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-            setProducts(data.data);
-            localStorage.setItem('meherban_products', JSON.stringify(data.data));
+            setProducts((prev) => {
+              const dbIds = new Set(data.data.map((p: MeherbanProduct) => p.id));
+              const localUnique = prev.filter((p) => !dbIds.has(p.id));
+              const merged = [...data.data, ...localUnique];
+              try {
+                localStorage.setItem('meherban_products', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
           }
         }
 
@@ -395,11 +405,13 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Products CRUD Operations for Seller & Admin
   const addProduct = async (input: NewProductInput): Promise<MeherbanProduct> => {
-    const slug = input.title
+    const cleanSlug = input.title
       .toLowerCase()
       .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-') + `-${Date.now().toString().slice(-4)}`;
+      .replace(/[^\w\s\u0980-\u09FF-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const slug = (cleanSlug || 'product') + `-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
     const effectiveSellerId = input.sellerId || (currentSeller ? currentSeller.id : 'seller-1');
     const effectiveSellerName = input.sellerName || (currentSeller ? currentSeller.shopName : 'Meherban Apparel Store');

@@ -9,6 +9,14 @@ export const MeherbanCollections: React.FC = () => {
   const { setActiveCategory, categories } = useMeherban();
   const displayCategories = categories && categories.length > 0 ? categories : MEHERBAN_CATEGORIES;
 
+  const handleCategoryClick = (categoryName: string) => {
+    setActiveCategory(categoryName);
+    const el = document.getElementById('trending');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section id="collections" className="py-10 sm:py-16 bg-[#FAF9F6] text-neutral-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,6 +33,7 @@ export const MeherbanCollections: React.FC = () => {
 
           <a
             href="#trending"
+            onClick={() => setActiveCategory('All')}
             className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium uppercase tracking-wider text-neutral-600 hover:text-black transition-colors"
           >
             <span>VIEW ALL</span>
@@ -41,7 +50,7 @@ export const MeherbanCollections: React.FC = () => {
           {displayCategories.map((category) => (
             <div
               key={category.id}
-              onClick={() => setActiveCategory(category.name)}
+              onClick={() => handleCategoryClick(category.name)}
               className="group relative aspect-[3/4] sm:aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer shadow-xs hover:shadow-xl transition-all duration-300 bg-neutral-200"
             >
               {/* Image */}

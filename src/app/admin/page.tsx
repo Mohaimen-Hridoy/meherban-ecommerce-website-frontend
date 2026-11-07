@@ -55,6 +55,7 @@ export default function AdminPage() {
     adminLogin,
     logout,
     addToast,
+    categories,
   } = useMeherban();
 
   // Authentication State
@@ -78,6 +79,7 @@ export default function AdminPage() {
   // Product Add / Edit Modal State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
 
   // Add Seller Modal State
   const [isAddSellerModalOpen, setIsAddSellerModalOpen] = useState(false);
@@ -120,22 +122,40 @@ export default function AdminPage() {
   const [customColorHex, setCustomColorHex] = useState('#111111');
   const [imageUrlInput, setImageUrlInput] = useState('');
 
-  // Popular Fashion Color Swatch Presets
+  // 15 Standard Brand Color Swatch Presets (Black, White, Navy Blue, Royal Blue, Sky Blue, Red, Maroon, Pink, Baby Pink, Purple, Lavender, Green, Olive Green, Beige, Brown)
   const POPULAR_COLORS = [
-    { name: 'Black', hex: '#111111' },
+    { name: 'Black', hex: '#000000' },
     { name: 'White', hex: '#FFFFFF' },
-    { name: 'Navy Blue', hex: '#0F172A' },
-    { name: 'Charcoal Grey', hex: '#4B5563' },
-    { name: 'Beige / Khaki', hex: '#D8C3A5' },
-    { name: 'Olive Green', hex: '#556B2F' },
+    { name: 'Navy Blue', hex: '#000080' },
+    { name: 'Royal Blue', hex: '#4169E1' },
+    { name: 'Sky Blue', hex: '#87CEEB' },
+    { name: 'Red', hex: '#FF0000' },
     { name: 'Maroon', hex: '#800000' },
-    { name: 'Chocolate Brown', hex: '#4A2C11' },
-    { name: 'Dusty Rose', hex: '#D98880' },
-    { name: 'Champagne Gold', hex: '#D4AF37' },
+    { name: 'Pink', hex: '#FFC0CB' },
+    { name: 'Baby Pink', hex: '#F4C2C2' },
+    { name: 'Purple', hex: '#800080' },
+    { name: 'Lavender', hex: '#E6E6FA' },
+    { name: 'Green', hex: '#008000' },
+    { name: 'Olive Green', hex: '#808000' },
+    { name: 'Beige', hex: '#F5F5DC' },
+    { name: 'Brown', hex: '#8B4513' },
   ];
 
   // Standard Fashion Sizes
   const STANDARD_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
+
+  // All Available Dynamic & Standard Categories
+  const availableCategories = Array.from(
+    new Set([
+      'Men',
+      'Women',
+      'Unisex',
+      'Accessories',
+      'Clothing',
+      ...(categories || []).map((c) => c.name),
+      ...products.map((p) => p.categoryName),
+    ])
+  ).filter(Boolean);
 
   // Toggle Preset Color Swatch
   const handleToggleColorPreset = (color: { name: string; hex: string }) => {
@@ -400,12 +420,14 @@ export default function AdminPage() {
   const handleOpenAddModal = () => {
     setEditingProductId(null);
     setProductForm(initialFormState);
+    setIsCustomCategory(false);
     setIsProductModalOpen(true);
   };
 
   // Open Modal for Edit Product
   const handleOpenEditModal = (p: MeherbanProduct) => {
     setEditingProductId(p.id);
+    setIsCustomCategory(!availableCategories.includes(p.categoryName));
     setProductForm({
       title: p.title,
       subtitle: p.subtitle || '',
@@ -943,12 +965,17 @@ export default function AdminPage() {
                   onChange={(e) => setProductCategoryFilter(e.target.value)}
                   className="px-3 py-2 text-xs rounded-lg border border-neutral-300 focus:border-black outline-none bg-white font-medium"
                 >
-                  <option value="ALL">সকল ক্যাটাগরি</option>
-                  <option value="Men">Men</option>
-                  <option value="Women">Women</option>
-                  <option value="Unisex">Unisex</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Clothing">Clothing</option>
+                  <option value="ALL">সকল ক্যাটাগরি ({products.length})</option>
+                  {availableCategories.map((cat) => {
+                    const count = products.filter(
+                      (p) => p.categoryName.toLowerCase() === cat.toLowerCase()
+                    ).length;
+                    return (
+                      <option key={cat} value={cat}>
+                        {cat} ({count})
+                      </option>
+                    );
+                  })}
                 </select>
 
                 <select
@@ -1475,18 +1502,46 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-neutral-700 mb-1">ক্যাটাগরি</label>
-                  <select
-                    value={productForm.categoryName}
-                    onChange={(e) => setProductForm({ ...productForm, categoryName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-300 focus:border-black outline-none bg-white font-medium"
-                  >
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Unisex">Unisex</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Clothing">Clothing</option>
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-neutral-700">ক্যাটাগরি</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomCategory(!isCustomCategory)}
+                      className="text-[10px] text-amber-700 hover:text-black font-semibold underline"
+                    >
+                      {isCustomCategory ? 'লিস্ট থেকে বাছুন' : '+ নতুন ক্যাটাগরি'}
+                    </button>
+                  </div>
+
+                  {isCustomCategory ? (
+                    <input
+                      type="text"
+                      placeholder="নতুন ক্যাটাগরির নাম (যেমন: Panjabi)"
+                      value={productForm.categoryName}
+                      onChange={(e) => setProductForm({ ...productForm, categoryName: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-amber-500 focus:border-black outline-none bg-white font-medium text-neutral-900"
+                    />
+                  ) : (
+                    <select
+                      value={productForm.categoryName}
+                      onChange={(e) => {
+                        if (e.target.value === '__NEW__') {
+                          setIsCustomCategory(true);
+                          setProductForm({ ...productForm, categoryName: '' });
+                        } else {
+                          setProductForm({ ...productForm, categoryName: e.target.value });
+                        }
+                      }}
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-300 focus:border-black outline-none bg-white font-medium text-neutral-900"
+                    >
+                      {availableCategories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                      <option value="__NEW__">+ নতুন ক্যাটাগরি লিখুন...</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>
