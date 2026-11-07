@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   CartItem,
   MeherbanProduct,
@@ -188,8 +188,18 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [categories, setCategories] = useState<MeherbanCategory[]>(MEHERBAN_CATEGORIES);
   const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>(INSTAGRAM_POSTS);
 
+  // Persistence guard: prevents initial default state from wiping localStorage on mount
+  const isStorageLoaded = useRef(false);
+
   const getBackendUrl = () => {
-    let url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    let url = process.env.NEXT_PUBLIC_API_URL || '';
+    if (!url || url.includes('localhost')) {
+      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        url = 'https://meherban-ecommerce-website-backend.vercel.app';
+      } else {
+        url = url || 'http://localhost:5000';
+      }
+    }
     url = url.replace(/\/api\/v1\/?$/, '');
     url = url.replace(/\/$/, '');
     return url;
@@ -210,15 +220,40 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Initial Load from LocalStorage and Backend API
   useEffect(() => {
     try {
+      // 1. Load user custom products (permanent, never auto-removed)
+      const savedCustom = localStorage.getItem('meherban_custom_products');
+      let customProducts: MeherbanProduct[] = [];
+      if (savedCustom) {
+        try {
+          const parsedCustom = JSON.parse(savedCustom);
+          if (Array.isArray(parsedCustom)) {
+            customProducts = parsedCustom;
+          }
+        } catch {}
+      }
+
+      // 2. Load general product catalog
       const savedProducts = localStorage.getItem('meherban_products');
+      let catalogProducts: MeherbanProduct[] = MEHERBAN_PRODUCTS;
       if (savedProducts) {
         try {
           const parsed = JSON.parse(savedProducts);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setProducts(parsed);
+            catalogProducts = parsed;
           }
         } catch {}
       }
+
+      // 3. Guarantee user-created custom products are ALWAYS retained at top
+      const customIds = new Set(customProducts.map((p) => p.id));
+      const catalogWithoutCustom = catalogProducts.filter((p) => !customIds.has(p.id));
+      const mergedProducts = [...customProducts, ...catalogWithoutCustom];
+
+      setProducts(mergedProducts);
+      isStorageLoaded.current = true;
+      try {
+        localStorage.setItem('meherban_products', JSON.stringify(mergedProducts));
+      } catch {}
 
       const savedCart = localStorage.getItem('meherban_cart');
       if (savedCart) setCart(JSON.parse(savedCart));
@@ -266,17 +301,35 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const url = getBackendUrl();
         const [prodRes, orderRes] = await Promise.allSettled([
-          fetch(`${url}/api/v1/meherban/products`, { signal: AbortSignal.timeout(4000) }),
-          fetch(`${url}/api/v1/meherban/admin/orders`, { signal: AbortSignal.timeout(4000) }),
+          fetch(`${url}/api/v1/meherban/products`, { signal: AbortSignal.timeout(5000) }),
+          fetch(`${url}/api/v1/meherban/admin/orders`, { signal: AbortSignal.timeout(5000) }),
         ]);
 
         if (prodRes.status === 'fulfilled' && prodRes.value.ok) {
           const data = await prodRes.value.json();
           if (data.data && Array.isArray(data.data) && data.data.length > 0) {
             setProducts((prev) => {
-              const dbIds = new Set(data.data.map((p: MeherbanProduct) => p.id));
-              const localUnique = prev.filter((p) => !dbIds.has(p.id));
-              const merged = [...data.data, ...localUnique];
+              // Retrieve persistent custom products
+              let persistentCustom: MeherbanProduct[] = [];
+              try {
+                const s = localStorage.getItem('meherban_custom_products');
+                if (s) persistentCustom = JSON.parse(s);
+              } catch {}
+
+              const customIds = new Set(persistentCustom.map((p) => p.id));
+              const dbProducts = data.data as MeherbanProduct[];
+              const dbIds = new Set(dbProducts.map((p) => p.id));
+
+              // Retain any items in prev that are custom or not yet returned by DB
+              const localUnique = prev.filter((p) => customIds.has(p.id) || !dbIds.has(p.id));
+              const combinedMap = new Map<string, MeherbanProduct>();
+              persistentCustom.forEach((p) => combinedMap.set(p.id, p));
+              localUnique.forEach((p) => combinedMap.set(p.id, p));
+              dbProducts.forEach((p) => {
+                if (!combinedMap.has(p.id)) combinedMap.set(p.id, p);
+              });
+
+              const merged = Array.from(combinedMap.values());
               try {
                 localStorage.setItem('meherban_products', JSON.stringify(merged));
               } catch {}
@@ -298,7 +351,7 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetchApiData();
   }, []);
 
-  // Sync to LocalStorage
+  // Sync to LocalStorage (Guarded: NEVER overwrite on mount!)
   useEffect(() => {
     try {
       localStorage.setItem('meherban_cart', JSON.stringify(cart));
@@ -312,6 +365,7 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [wishlist]);
 
   useEffect(() => {
+    if (!isStorageLoaded.current) return;
     try {
       localStorage.setItem('meherban_products', JSON.stringify(products));
     } catch {}
@@ -445,6 +499,16 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       sellerName: effectiveSellerName,
     };
 
+    // 1. Permanently store in meherban_custom_products (never wiped)
+    try {
+      const existingCustom: MeherbanProduct[] = JSON.parse(
+        localStorage.getItem('meherban_custom_products') || '[]'
+      );
+      const updatedCustom = [newProd, ...existingCustom.filter((p) => p.id !== newProd.id)];
+      localStorage.setItem('meherban_custom_products', JSON.stringify(updatedCustom));
+    } catch {}
+
+    // 2. Update reactive product state
     setProducts((prev) => {
       const updated = [newProd, ...prev.filter((p) => p.id !== newProd.id)];
       try {
@@ -506,6 +570,18 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return updated;
     });
 
+    // Also update custom products if present
+    try {
+      const existingCustom: MeherbanProduct[] = JSON.parse(
+        localStorage.getItem('meherban_custom_products') || '[]'
+      );
+      const cIdx = existingCustom.findIndex((p) => p.id === id);
+      if (cIdx !== -1 && updatedProduct) {
+        existingCustom[cIdx] = updatedProduct;
+        localStorage.setItem('meherban_custom_products', JSON.stringify(existingCustom));
+      }
+    } catch {}
+
     if (updatedProduct) {
       addToast(`"${(updatedProduct as MeherbanProduct).title}" আপডেট সম্পন্ন!`, 'success');
 
@@ -524,6 +600,16 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteProduct = async (id: string): Promise<boolean> => {
     const prod = products.find((p) => p.id === id);
+
+    // Remove from custom products
+    try {
+      const existingCustom: MeherbanProduct[] = JSON.parse(
+        localStorage.getItem('meherban_custom_products') || '[]'
+      );
+      const filteredCustom = existingCustom.filter((p) => p.id !== id);
+      localStorage.setItem('meherban_custom_products', JSON.stringify(filteredCustom));
+    } catch {}
+
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       try {
