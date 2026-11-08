@@ -16,6 +16,7 @@ export interface MeherbanProduct {
   rating: number;
   reviewCount: number;
   categoryName: string;
+  subcategory?: string;
   images: string[];
   colorSwatches: ColorSwatch[];
   sizes: string[];

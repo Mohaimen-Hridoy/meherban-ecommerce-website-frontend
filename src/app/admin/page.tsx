@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
 import { MeherbanProduct, MeherbanOrder, MeherbanSeller, ColorSwatch } from '@/types/meherban';
+import { SUBCATEGORIES_BY_CATEGORY, inferSubcategory } from '@/lib/meherbanSubcategories';
 
 export default function AdminPage() {
   const {
@@ -100,6 +101,7 @@ export default function AdminPage() {
     price: '',
     originalPrice: '',
     categoryName: 'Men',
+    subcategory: '',
     sellerId: 'seller-1',
     images: [''],
     colorSwatches: [
@@ -448,6 +450,7 @@ export default function AdminPage() {
       price: String(p.price),
       originalPrice: p.originalPrice ? String(p.originalPrice) : '',
       categoryName: p.categoryName,
+      subcategory: p.subcategory || inferSubcategory(p),
       sellerId: p.sellerId || 'seller-1',
       images: p.images.length > 0 ? p.images : [''],
       colorSwatches: p.colorSwatches.length > 0 ? p.colorSwatches.map((c) => ({
@@ -497,6 +500,7 @@ export default function AdminPage() {
         price: Number(productForm.price),
         originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : Number(productForm.price),
         categoryName: finalCategoryName,
+        subcategory: productForm.subcategory.trim() || undefined,
         images: finalImages,
         colorSwatches: productForm.colorSwatches,
         sizes: productForm.sizes,
@@ -516,6 +520,7 @@ export default function AdminPage() {
         price: Number(productForm.price),
         originalPrice: productForm.originalPrice ? Number(productForm.originalPrice) : Number(productForm.price),
         categoryName: finalCategoryName,
+        subcategory: productForm.subcategory.trim() || undefined,
         images: finalImages,
         colorSwatches: productForm.colorSwatches,
         sizes: productForm.sizes,
@@ -1580,6 +1585,59 @@ export default function AdminPage() {
                     {productForm.inStock ? 'In Stock (স্টকে আছে)' : 'Unavailable (স্টক শেষ)'}
                   </button>
                 </div>
+              </div>
+
+              {/* Subcategory / Product Type */}
+              <div className="p-3.5 bg-neutral-50/80 rounded-xl border border-neutral-200">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700">
+                    সাব-ক্যাটাগরি / পণ্যের ধরন (Subcategory)
+                  </label>
+                  {productForm.subcategory && (
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, subcategory: '' })}
+                      className="text-[10px] text-neutral-400 hover:text-rose-600 underline font-medium"
+                    >
+                      রিসেট
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Select Chips based on Main Category */}
+                {SUBCATEGORIES_BY_CATEGORY[productForm.categoryName] && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {SUBCATEGORIES_BY_CATEGORY[productForm.categoryName].map((sub) => {
+                      const isSelected =
+                        productForm.subcategory?.toLowerCase() === sub.name.toLowerCase();
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => setProductForm({ ...productForm, subcategory: sub.name })}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                            isSelected
+                              ? 'bg-neutral-900 text-white border-neutral-900 font-semibold shadow-xs'
+                              : 'bg-white hover:bg-neutral-100 text-neutral-700 border-neutral-200'
+                          }`}
+                        >
+                          {sub.name} <span className="opacity-70 text-[10px]">({sub.nameBn})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="সাব-ক্যাটাগরি টাইপ করুন বা উপরের বাটনে ক্লিক করুন (যেমন: Panjabi, Saree, Watches)"
+                  value={productForm.subcategory}
+                  onChange={(e) => setProductForm({ ...productForm, subcategory: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 focus:border-black outline-none bg-white text-xs font-medium text-neutral-900"
+                />
+                <p className="text-[10.5px] text-neutral-400 mt-1">
+                  খালি রাখলে পণ্যের নাম থেকে অটোমেটিক ক্যাটাগরি নির্ধারণ করা হবে।
+                </p>
               </div>
 
               {/* Product Multi-Image Upload & Gallery (একাধিক ছবি আপলোড) */}

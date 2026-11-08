@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
 import { MeherbanProduct } from '@/types/meherban';
+import { getSubcategoriesForCategory, inferSubcategory } from '@/lib/meherbanSubcategories';
 
 export const MeherbanTrending: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -28,6 +29,8 @@ export const MeherbanTrending: React.FC = () => {
     openQuickView,
     activeCategory,
     setActiveCategory,
+    activeSubcategory,
+    setActiveSubcategory,
   } = useMeherban();
 
   const [selectedColors, setSelectedColors] = useState<{ [productId: string]: string }>({});
@@ -114,15 +117,27 @@ export const MeherbanTrending: React.FC = () => {
     }
   };
 
-  // Filter products according to activeCategory (unlimited products in any category)
+  // Dynamic Subcategory Extraction for currently selected category
+  const subcategoryList = useMemo(() => {
+    return getSubcategoriesForCategory(activeCategory, products);
+  }, [activeCategory, products]);
+
+  // Filter products according to activeCategory & activeSubcategory
   const displayedProducts = useMemo(() => {
-    if (!activeCategory || activeCategory === 'Home' || activeCategory.toLowerCase() === 'all') {
-      return products;
+    let list = products;
+    if (activeCategory && activeCategory !== 'Home' && activeCategory.toLowerCase() !== 'all') {
+      list = list.filter(
+        (p) => p.categoryName && p.categoryName.trim().toLowerCase() === activeCategory.trim().toLowerCase()
+      );
     }
-    return products.filter(
-      (p) => p.categoryName && p.categoryName.trim().toLowerCase() === activeCategory.trim().toLowerCase()
-    );
-  }, [products, activeCategory]);
+    if (activeSubcategory && activeSubcategory.toLowerCase() !== 'all') {
+      list = list.filter((p) => {
+        const sub = inferSubcategory(p);
+        return sub.trim().toLowerCase() === activeSubcategory.trim().toLowerCase();
+      });
+    }
+    return list;
+  }, [products, activeCategory, activeSubcategory]);
 
   return (
     <section id="trending" className="py-10 sm:py-16 bg-white text-neutral-900 border-t border-neutral-100">
@@ -141,8 +156,8 @@ export const MeherbanTrending: React.FC = () => {
             </div>
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold uppercase tracking-tight text-neutral-950">
               {activeCategory && activeCategory !== 'Home' && activeCategory !== 'All'
-                ? `${activeCategory} PRODUCTS`
-                : 'TRENDING NOW'}
+                ? (activeSubcategory && activeSubcategory !== 'All' ? `${activeCategory} • ${activeSubcategory}` : `${activeCategory} PRODUCTS`)
+                : (activeSubcategory && activeSubcategory !== 'All' ? activeSubcategory : 'TRENDING NOW')}
             </h2>
           </div>
 
@@ -208,7 +223,7 @@ export const MeherbanTrending: React.FC = () => {
         </div>
 
         {/* Dynamic Category Filter Pills (Unlimited Categories Support) */}
-        <div className="mb-8 overflow-x-auto no-scrollbar pb-2">
+        <div className="mb-4 overflow-x-auto no-scrollbar pb-1">
           <div className="flex items-center gap-2 min-w-max">
             {categoryList.map((catName) => {
               const isCatActive =
@@ -227,7 +242,7 @@ export const MeherbanTrending: React.FC = () => {
                       : 'bg-neutral-100/80 hover:bg-neutral-200/90 text-neutral-700 hover:text-neutral-950'
                   }`}
                 >
-                  <span>{catName === 'All' ? 'সকল পণ্য' : catName}</span>
+                  <span>{catName === 'All' ? 'সকল কালেকশন' : catName}</span>
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                       isCatActive
@@ -242,6 +257,45 @@ export const MeherbanTrending: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* Dynamic Subcategory Filter Pills (Panjabi, Shirts, Kurti, Saree, Watches, etc.) */}
+        {subcategoryList.length > 1 && (
+          <div className="mb-8 overflow-x-auto no-scrollbar pb-2 pt-2 border-t border-neutral-100/80 flex items-center gap-2">
+            <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest shrink-0 mr-1 flex items-center gap-1 select-none">
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              <span>ধরন:</span>
+            </span>
+            <div className="flex items-center gap-1.5 min-w-max">
+              {subcategoryList.map((sub) => {
+                const isSubActive =
+                  (sub.name === 'All' && (!activeSubcategory || activeSubcategory.toLowerCase() === 'all')) ||
+                  (activeSubcategory && activeSubcategory.trim().toLowerCase() === sub.name.trim().toLowerCase());
+
+                return (
+                  <button
+                    key={sub.name}
+                    type="button"
+                    onClick={() => setActiveSubcategory(sub.name)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer select-none ${
+                      isSubActive
+                        ? 'bg-amber-600 text-white font-semibold shadow-xs ring-1 ring-amber-600'
+                        : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 border border-neutral-200/80'
+                    }`}
+                  >
+                    <span>{sub.nameBn ? `${sub.nameBn}` : sub.name}</span>
+                    <span
+                      className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono ${
+                        isSubActive ? 'bg-white/25 text-white font-bold' : 'bg-neutral-200/70 text-neutral-600'
+                      }`}
+                    >
+                      {sub.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Empty State when Category has 0 Products */}
         {displayedProducts.length === 0 ? (
@@ -334,6 +388,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const activeColor = selectedColors[product.id] || product.colorSwatches[0]?.name;
   const activeSwatch = product.colorSwatches.find((c) => c.name === activeColor);
+  const subcategory = inferSubcategory(product);
   const isSwatchAvailable = activeSwatch
     ? activeSwatch.inStock !== false &&
       (activeSwatch.stockQuantity === undefined || activeSwatch.stockQuantity > 0)
@@ -403,7 +458,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Info */}
       <div className="pt-2 pb-1 flex flex-col space-y-1">
         <div className="flex items-center justify-between text-[10px] text-neutral-400 uppercase font-semibold">
-          <span className="truncate">{product.categoryName}</span>
+          <span className="truncate">
+            {product.categoryName}
+            {subcategory && subcategory !== 'General' && subcategory.toLowerCase() !== product.categoryName.toLowerCase() ? ` • ${subcategory}` : ''}
+          </span>
           {activeSwatch && (
             <span className="text-[9px] text-neutral-500 lowercase capitalize">
               {activeSwatch.name}

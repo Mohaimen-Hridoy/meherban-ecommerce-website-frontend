@@ -26,6 +26,7 @@ import {
   idbGetAllCustomProducts,
   idbDeleteProduct,
 } from '@/lib/meherbanStorage';
+import { inferSubcategory } from '@/lib/meherbanSubcategories';
 
 export type DeviceViewMode = 'responsive' | 'desktop' | 'mobile' | 'split';
 
@@ -42,6 +43,7 @@ interface NewProductInput {
   price: number;
   originalPrice?: number;
   categoryName: string;
+  subcategory?: string;
   images: string[];
   colorSwatches: ColorSwatch[];
   sizes: string[];
@@ -148,6 +150,8 @@ interface MeherbanContextType {
   // Navigation Filter
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
+  activeSubcategory: string;
+  setActiveSubcategory: (subcat: string) => void;
 
   // Notifications
   toasts: ToastMessage[];
@@ -210,7 +214,14 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [deviceView, setDeviceView] = useState<DeviceViewMode>('responsive');
-  const [activeCategory, setActiveCategory] = useState<string>('Home');
+  const [activeCategoryState, setActiveCategoryState] = useState<string>('Home');
+  const [activeSubcategory, setActiveSubcategory] = useState<string>('All');
+
+  const setActiveCategory = useCallback((cat: string) => {
+    setActiveCategoryState(cat);
+    setActiveSubcategory('All');
+  }, []);
+  const activeCategory = activeCategoryState;
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Frontpage Media States (controlled by single seller)
@@ -521,6 +532,9 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       (c) => c.toLowerCase() === cleanCat.toLowerCase()
     );
     const categoryName = standardMatch || cleanCat;
+    const subcategory = (input.subcategory && input.subcategory.trim().length > 0)
+      ? input.subcategory.trim()
+      : inferSubcategory({ title: input.title, subtitle: input.subtitle, description: input.description, categoryName });
 
     const newProd: MeherbanProduct = {
       id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -533,6 +547,7 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       rating: 5.0,
       reviewCount: 1,
       categoryName,
+      subcategory,
       images: input.images.length > 0 ? input.images : ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80'],
       colorSwatches: input.colorSwatches.length > 0 ? input.colorSwatches : [{ name: 'Black', hex: '#000000', inStock: true, stockQuantity: 20 }],
       sizes: input.sizes.length > 0 ? input.sizes : ['Standard'],
@@ -601,6 +616,9 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             ...item,
             ...updatedData,
             categoryName: cat,
+            subcategory: updatedData.subcategory !== undefined
+              ? (updatedData.subcategory.trim() || inferSubcategory({ title: updatedData.title || item.title, categoryName: cat }))
+              : item.subcategory || inferSubcategory(item),
             price: updatedData.price !== undefined ? Number(updatedData.price) : item.price,
             originalPrice: updatedData.originalPrice !== undefined ? Number(updatedData.originalPrice) : item.originalPrice,
             stockQuantity: updatedData.stockQuantity !== undefined ? Number(updatedData.stockQuantity) : item.stockQuantity,
@@ -1191,6 +1209,8 @@ export const MeherbanProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         activeCategory,
         setActiveCategory,
+        activeSubcategory,
+        setActiveSubcategory,
 
         toasts,
         addToast,
