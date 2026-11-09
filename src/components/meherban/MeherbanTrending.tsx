@@ -131,9 +131,13 @@ export const MeherbanTrending: React.FC = () => {
       );
     }
     if (activeSubcategory && activeSubcategory.toLowerCase() !== 'all') {
+      const targetSub = activeSubcategory.trim().toLowerCase();
+      const targetSubNoSpace = targetSub.replace(/[\s-]+/g, '');
       list = list.filter((p) => {
         const sub = inferSubcategory(p);
-        return sub.trim().toLowerCase() === activeSubcategory.trim().toLowerCase();
+        const subLower = sub.trim().toLowerCase();
+        const subNoSpace = subLower.replace(/[\s-]+/g, '');
+        return subLower === targetSub || subNoSpace === targetSubNoSpace;
       });
     }
     return list;
@@ -282,7 +286,12 @@ export const MeherbanTrending: React.FC = () => {
                         : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 border border-neutral-200/80'
                     }`}
                   >
-                    <span>{sub.nameBn ? `${sub.nameBn}` : sub.name}</span>
+                    <span>{sub.name === 'All' ? 'সব পণ্য / All' : sub.name}</span>
+                    {sub.name !== 'All' && sub.nameBn && (
+                      <span className="text-[10px] opacity-75 font-normal">
+                        ({sub.nameBn})
+                      </span>
+                    )}
                     <span
                       className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono ${
                         isSubActive ? 'bg-white/25 text-white font-bold' : 'bg-neutral-200/70 text-neutral-600'

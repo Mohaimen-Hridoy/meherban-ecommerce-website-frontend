@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { useMeherban } from '@/context/MeherbanContext';
 import { MeherbanProduct, MeherbanOrder, MeherbanSeller, ColorSwatch } from '@/types/meherban';
-import { SUBCATEGORIES_BY_CATEGORY, inferSubcategory } from '@/lib/meherbanSubcategories';
+import { SUBCATEGORIES_BY_CATEGORY, inferSubcategory, getStandardCategoryKey } from '@/lib/meherbanSubcategories';
 
 export default function AdminPage() {
   const {
@@ -1605,9 +1605,9 @@ export default function AdminPage() {
                 </div>
 
                 {/* Quick Select Chips based on Main Category */}
-                {SUBCATEGORIES_BY_CATEGORY[productForm.categoryName] && (
+                {SUBCATEGORIES_BY_CATEGORY[getStandardCategoryKey(productForm.categoryName)] && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
-                    {SUBCATEGORIES_BY_CATEGORY[productForm.categoryName].map((sub) => {
+                    {SUBCATEGORIES_BY_CATEGORY[getStandardCategoryKey(productForm.categoryName)].map((sub) => {
                       const isSelected =
                         productForm.subcategory?.toLowerCase() === sub.name.toLowerCase();
                       return (
