@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { MeherbanTopBanner } from '@/components/meherban/MeherbanTopBanner';
 import { MeherbanHeader } from '@/components/meherban/MeherbanHeader';
 import { MeherbanHero } from '@/components/meherban/MeherbanHero';
 import { MeherbanCollections } from '@/components/meherban/MeherbanCollections';
@@ -20,7 +19,6 @@ import { MeherbanCheckoutModal } from '@/components/meherban/MeherbanCheckoutMod
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAF8]">
-      <MeherbanTopBanner />
       <MeherbanHeader />
       <main className="flex-1">
         <MeherbanHero />
