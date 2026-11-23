@@ -8,7 +8,7 @@ export const MeherbanTopBanner: React.FC = () => {
   const isMobile = deviceView === 'mobile';
 
   return (
-    <div className="bg-[#0A0A0A] text-white text-[11px] sm:text-[12px] font-normal py-2 px-3 tracking-wide border-b border-neutral-800 shrink-0">
+    <div className="bg-[#0A0A0A] text-white text-[11px] sm:text-[12px] font-normal py-2 px-3 tracking-wide shrink-0">
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-4 text-center">
         {/* Desktop View Content */}
         {!isMobile && (
